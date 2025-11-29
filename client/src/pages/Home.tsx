@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { useAdmin } from '@/lib/adminContext';
-import { useContent } from '@/lib/contentContext';
+import { useContent, type CustomSection } from '@/lib/contentContext';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
@@ -42,7 +42,15 @@ import {
   Send,
   Eye,
   EyeOff,
-  Layers
+  Layers,
+  Plus,
+  Trash2,
+  Copy,
+  Type,
+  Grid3X3,
+  MessageSquare,
+  Image,
+  Megaphone
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -244,8 +252,21 @@ function ContactForm() {
 }
 
 function SectionManager() {
-  const { getSectionOrder, isSectionVisible, toggleSectionVisibility, moveSectionUp, moveSectionDown } = useContent();
+  const { 
+    getSectionOrder, 
+    isSectionVisible, 
+    toggleSectionVisibility, 
+    moveSectionUp, 
+    moveSectionDown,
+    getCustomSections,
+    addCustomSection,
+    deleteCustomSection,
+    duplicateSection
+  } = useContent();
+  const { toast } = useToast();
   const order = getSectionOrder();
+  const customSections = getCustomSections();
+  const [showAddMenu, setShowAddMenu] = useState(false);
   
   const sectionNames: Record<string, string> = {
     hero: 'Hero Banner',
@@ -257,19 +278,65 @@ function SectionManager() {
     contact: 'Contact'
   };
 
+  const getSectionName = (sectionId: string) => {
+    if (sectionNames[sectionId]) return sectionNames[sectionId];
+    const custom = customSections.find(s => s.id === sectionId);
+    return custom?.name || sectionId;
+  };
+
+  const isCustomSection = (sectionId: string) => {
+    return sectionId.startsWith('custom-');
+  };
+
+  const sectionTypes = [
+    { type: 'text' as const, name: 'Text Block', icon: <Type className="w-4 h-4" /> },
+    { type: 'features' as const, name: 'Features Grid', icon: <Grid3X3 className="w-4 h-4" /> },
+    { type: 'cta' as const, name: 'Call to Action', icon: <Megaphone className="w-4 h-4" /> },
+    { type: 'testimonial' as const, name: 'Testimonial', icon: <MessageSquare className="w-4 h-4" /> },
+    { type: 'gallery' as const, name: 'Image Gallery', icon: <Image className="w-4 h-4" /> },
+  ];
+
+  const handleAddSection = (type: CustomSection['type']) => {
+    const name = sectionTypes.find(t => t.type === type)?.name || 'New Section';
+    addCustomSection(type, name);
+    setShowAddMenu(false);
+    toast({
+      title: "Section Added",
+      description: `New ${name} section has been created. Don't forget to save!`,
+    });
+  };
+
+  const handleDeleteSection = (sectionId: string) => {
+    deleteCustomSection(sectionId);
+    toast({
+      title: "Section Deleted",
+      description: "Section has been removed. Don't forget to save!",
+    });
+  };
+
+  const handleDuplicateSection = (sectionId: string) => {
+    duplicateSection(sectionId);
+    toast({
+      title: "Section Duplicated",
+      description: "Section has been copied. Don't forget to save!",
+    });
+  };
+
   return (
-    <div className="fixed left-6 top-1/2 -translate-y-1/2 z-50 bg-white rounded-xl shadow-2xl border border-slate-200 p-3 max-w-[200px]">
+    <div className="fixed left-6 top-1/2 -translate-y-1/2 z-50 bg-white rounded-xl shadow-2xl border border-slate-200 p-3 max-w-[220px] max-h-[80vh] overflow-y-auto">
       <div className="flex items-center gap-2 pb-2 border-b border-slate-200 mb-2">
         <Layers className="w-4 h-4 text-blue-600" />
         <span className="text-sm font-bold text-slate-700">Sections</span>
       </div>
-      <div className="space-y-1">
+      
+      <div className="space-y-1 mb-3">
         {order.map((sectionId, index) => {
           const visible = isSectionVisible(sectionId);
+          const isCustom = isCustomSection(sectionId);
           return (
             <div 
               key={sectionId}
-              className={`flex items-center gap-1 p-1.5 rounded-lg ${visible ? 'bg-slate-50' : 'bg-red-50'}`}
+              className={`flex items-center gap-1 p-1.5 rounded-lg ${visible ? 'bg-slate-50' : 'bg-red-50'} ${isCustom ? 'border-l-2 border-green-500' : ''}`}
             >
               <button
                 onClick={() => toggleSectionVisibility(sectionId)}
@@ -280,39 +347,291 @@ function SectionManager() {
                 {visible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
               </button>
               <span className={`flex-1 text-xs font-medium truncate ${visible ? 'text-slate-700' : 'text-red-500 line-through'}`}>
-                {sectionNames[sectionId] || sectionId}
+                {getSectionName(sectionId)}
               </span>
-              <div className="flex flex-col">
-                <button
-                  onClick={() => moveSectionUp(sectionId)}
-                  disabled={index === 0}
-                  className="p-0.5 text-slate-400 hover:text-slate-600 disabled:opacity-30"
-                  data-testid={`manager-up-${sectionId}`}
-                >
-                  <ChevronDown className="w-3 h-3 rotate-180" />
-                </button>
-                <button
-                  onClick={() => moveSectionDown(sectionId)}
-                  disabled={index === order.length - 1}
-                  className="p-0.5 text-slate-400 hover:text-slate-600 disabled:opacity-30"
-                  data-testid={`manager-down-${sectionId}`}
-                >
-                  <ChevronDown className="w-3 h-3" />
-                </button>
+              <div className="flex items-center gap-0.5">
+                {isCustom && (
+                  <>
+                    <button
+                      onClick={() => handleDuplicateSection(sectionId)}
+                      className="p-0.5 text-slate-400 hover:text-blue-600"
+                      title="Duplicate section"
+                      data-testid={`manager-duplicate-${sectionId}`}
+                    >
+                      <Copy className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteSection(sectionId)}
+                      className="p-0.5 text-slate-400 hover:text-red-600"
+                      title="Delete section"
+                      data-testid={`manager-delete-${sectionId}`}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </>
+                )}
+                <div className="flex flex-col">
+                  <button
+                    onClick={() => moveSectionUp(sectionId)}
+                    disabled={index === 0}
+                    className="p-0.5 text-slate-400 hover:text-slate-600 disabled:opacity-30"
+                    data-testid={`manager-up-${sectionId}`}
+                  >
+                    <ChevronDown className="w-3 h-3 rotate-180" />
+                  </button>
+                  <button
+                    onClick={() => moveSectionDown(sectionId)}
+                    disabled={index === order.length - 1}
+                    className="p-0.5 text-slate-400 hover:text-slate-600 disabled:opacity-30"
+                    data-testid={`manager-down-${sectionId}`}
+                  >
+                    <ChevronDown className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
             </div>
           );
         })}
       </div>
+
+      <div className="border-t border-slate-200 pt-2">
+        <button
+          onClick={() => setShowAddMenu(!showAddMenu)}
+          className="w-full flex items-center justify-center gap-2 p-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-lg font-medium text-sm transition-colors"
+          data-testid="button-add-section"
+        >
+          <Plus className="w-4 h-4" />
+          Add Section
+        </button>
+        
+        {showAddMenu && (
+          <div className="mt-2 space-y-1 bg-slate-50 rounded-lg p-2">
+            <div className="text-xs text-slate-500 font-medium mb-1">Choose type:</div>
+            {sectionTypes.map((st) => (
+              <button
+                key={st.type}
+                onClick={() => handleAddSection(st.type)}
+                className="w-full flex items-center gap-2 p-2 hover:bg-white rounded text-left text-sm text-slate-700"
+                data-testid={`add-section-${st.type}`}
+              >
+                {st.icon}
+                {st.name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
+}
+
+function CustomSectionRenderer({ section }: { section: CustomSection }) {
+  const { isEditMode, isSectionVisible, getContent, updateContent, updateCustomSection } = useContent();
+  const visible = isSectionVisible(section.id);
+
+  const bgClasses = {
+    white: 'bg-white',
+    slate: 'bg-slate-50',
+    dark: 'bg-slate-900 text-white'
+  };
+
+  const bgClass = bgClasses[section.content.backgroundColor || 'white'];
+
+  const handleTitleChange = (newTitle: string) => {
+    updateCustomSection(section.id, {
+      content: { ...section.content, title: newTitle }
+    });
+  };
+
+  const handleDescChange = (newDesc: string) => {
+    updateCustomSection(section.id, {
+      content: { ...section.content, description: newDesc }
+    });
+  };
+
+  const handleSubtitleChange = (newSubtitle: string) => {
+    updateCustomSection(section.id, {
+      content: { ...section.content, subtitle: newSubtitle }
+    });
+  };
+
+  if (section.type === 'text') {
+    return (
+      <EditableSection id={section.id} name={section.name}>
+        <section className={`py-16 ${bgClass} ${!visible && isEditMode ? 'opacity-40' : ''}`}>
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 
+              contentEditable={isEditMode}
+              suppressContentEditableWarning
+              onBlur={(e) => handleTitleChange(e.currentTarget.innerText)}
+              className={`text-3xl font-bold mb-6 ${isEditMode ? 'ring-2 ring-blue-400 ring-offset-2 bg-blue-50/50 rounded cursor-text' : ''} ${section.content.backgroundColor === 'dark' ? 'text-white' : 'text-slate-900'}`}
+              data-testid={`custom-title-${section.id}`}
+            >
+              {section.content.title}
+            </h2>
+            <p
+              contentEditable={isEditMode}
+              suppressContentEditableWarning
+              onBlur={(e) => handleDescChange(e.currentTarget.innerText)}
+              className={`text-lg leading-relaxed ${isEditMode ? 'ring-2 ring-blue-400 ring-offset-2 bg-blue-50/50 rounded cursor-text' : ''} ${section.content.backgroundColor === 'dark' ? 'text-slate-300' : 'text-slate-600'}`}
+              data-testid={`custom-desc-${section.id}`}
+            >
+              {section.content.description}
+            </p>
+          </div>
+        </section>
+      </EditableSection>
+    );
+  }
+
+  if (section.type === 'features') {
+    return (
+      <EditableSection id={section.id} name={section.name}>
+        <section className={`py-20 ${bgClass} ${!visible && isEditMode ? 'opacity-40' : ''}`}>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <span
+                contentEditable={isEditMode}
+                suppressContentEditableWarning
+                onBlur={(e) => handleSubtitleChange(e.currentTarget.innerText)}
+                className={`text-blue-600 font-bold uppercase tracking-widest text-sm ${isEditMode ? 'ring-2 ring-blue-400 rounded cursor-text' : ''}`}
+              >
+                {section.content.subtitle}
+              </span>
+              <h2
+                contentEditable={isEditMode}
+                suppressContentEditableWarning
+                onBlur={(e) => handleTitleChange(e.currentTarget.innerText)}
+                className={`text-4xl font-extrabold mt-4 ${isEditMode ? 'ring-2 ring-blue-400 ring-offset-2 bg-blue-50/50 rounded cursor-text' : ''} ${section.content.backgroundColor === 'dark' ? 'text-white' : 'text-slate-900'}`}
+              >
+                {section.content.title}
+              </h2>
+            </div>
+            <div className="grid md:grid-cols-3 gap-8">
+              {section.content.items?.map((item, index) => (
+                <div key={item.id} className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">{item.title}</h3>
+                  <p className="text-slate-600">{item.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </EditableSection>
+    );
+  }
+
+  if (section.type === 'cta') {
+    return (
+      <EditableSection id={section.id} name={section.name}>
+        <section className={`py-20 bg-gradient-to-r from-blue-900 to-slate-900 text-white ${!visible && isEditMode ? 'opacity-40' : ''}`}>
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2
+              contentEditable={isEditMode}
+              suppressContentEditableWarning
+              onBlur={(e) => handleTitleChange(e.currentTarget.innerText)}
+              className={`text-4xl font-extrabold mb-6 ${isEditMode ? 'ring-2 ring-blue-400 ring-offset-2 rounded cursor-text' : ''}`}
+            >
+              {section.content.title}
+            </h2>
+            <p
+              contentEditable={isEditMode}
+              suppressContentEditableWarning
+              onBlur={(e) => handleDescChange(e.currentTarget.innerText)}
+              className={`text-xl text-blue-100 mb-8 ${isEditMode ? 'ring-2 ring-blue-400 rounded cursor-text' : ''}`}
+            >
+              {section.content.description}
+            </p>
+            <EditableButton
+              id={`custom-cta-${section.id}`}
+              defaultText={section.content.buttonText || 'Get Started'}
+              defaultLink={section.content.buttonLink || '#contact'}
+              className="bg-white text-blue-900 px-8 py-4 rounded-lg font-bold hover:bg-blue-50 transition-colors inline-flex items-center"
+              icon={<ArrowRight className="ml-2" size={20} />}
+            />
+          </div>
+        </section>
+      </EditableSection>
+    );
+  }
+
+  if (section.type === 'testimonial') {
+    return (
+      <EditableSection id={section.id} name={section.name}>
+        <section className={`py-20 ${bgClass} ${!visible && isEditMode ? 'opacity-40' : ''}`}>
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2
+              contentEditable={isEditMode}
+              suppressContentEditableWarning
+              onBlur={(e) => handleTitleChange(e.currentTarget.innerText)}
+              className={`text-3xl font-bold text-center mb-12 ${isEditMode ? 'ring-2 ring-blue-400 ring-offset-2 rounded cursor-text' : ''} ${section.content.backgroundColor === 'dark' ? 'text-white' : 'text-slate-900'}`}
+            >
+              {section.content.title}
+            </h2>
+            <div className="space-y-8">
+              {section.content.items?.map((item) => (
+                <div key={item.id} className="bg-white p-8 rounded-2xl shadow-lg border border-slate-100">
+                  <Quote className="w-10 h-10 text-blue-200 mb-4" />
+                  <p className="text-slate-600 text-lg italic mb-4">{item.description}</p>
+                  <div className="font-bold text-slate-900">{item.title}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </EditableSection>
+    );
+  }
+
+  if (section.type === 'gallery') {
+    return (
+      <EditableSection id={section.id} name={section.name}>
+        <section className={`py-20 ${bgClass} ${!visible && isEditMode ? 'opacity-40' : ''}`}>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <span
+                contentEditable={isEditMode}
+                suppressContentEditableWarning
+                onBlur={(e) => handleSubtitleChange(e.currentTarget.innerText)}
+                className={`text-blue-600 font-bold uppercase tracking-widest text-sm ${isEditMode ? 'ring-2 ring-blue-400 rounded cursor-text' : ''}`}
+              >
+                {section.content.subtitle}
+              </span>
+              <h2
+                contentEditable={isEditMode}
+                suppressContentEditableWarning
+                onBlur={(e) => handleTitleChange(e.currentTarget.innerText)}
+                className={`text-4xl font-extrabold mt-4 ${isEditMode ? 'ring-2 ring-blue-400 ring-offset-2 rounded cursor-text' : ''}`}
+              >
+                {section.content.title}
+              </h2>
+            </div>
+            <div className="grid md:grid-cols-3 gap-6">
+              {(section.content.items?.length || 0) === 0 && (
+                <div className="col-span-3 text-center py-12 bg-slate-100 rounded-xl text-slate-500">
+                  Gallery section - Add images in edit mode
+                </div>
+              )}
+              {section.content.items?.map((item) => (
+                <div key={item.id} className="aspect-video bg-slate-200 rounded-xl flex items-center justify-center text-slate-400">
+                  <Image className="w-12 h-12" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </EditableSection>
+    );
+  }
+
+  return null;
 }
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const { isAdmin, logout } = useAdmin();
-  const { isEditMode, setEditMode, saveAllChanges, hasUnsavedChanges, getSectionOrder, isSectionVisible } = useContent();
+  const { isEditMode, setEditMode, saveAllChanges, hasUnsavedChanges, getSectionOrder, isSectionVisible, getCustomSections, pendingChanges } = useContent();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
@@ -348,9 +667,18 @@ export default function Home() {
   };
 
   const sectionOrder = getSectionOrder();
+  const customSections = getCustomSections();
 
   const renderSection = (sectionId: string) => {
     if (!isSectionVisible(sectionId) && !isEditMode) return null;
+    
+    if (sectionId.startsWith('custom-')) {
+      const customSection = customSections.find(s => s.id === sectionId);
+      if (customSection) {
+        return <CustomSectionRenderer key={sectionId} section={customSection} />;
+      }
+      return null;
+    }
     
     switch (sectionId) {
       case 'hero':
@@ -414,7 +742,7 @@ export default function Home() {
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    Save ({Object.keys(useContent().pendingChanges || {}).length})
+                    Save ({Object.keys(pendingChanges).length})
                   </>
                 )}
               </Button>

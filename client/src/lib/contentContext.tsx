@@ -15,6 +15,27 @@ interface ButtonConfig {
   style?: 'primary' | 'secondary' | 'outline' | 'ghost';
 }
 
+export interface CustomSection {
+  id: string;
+  type: 'text' | 'features' | 'cta' | 'testimonial' | 'gallery';
+  name: string;
+  visible: boolean;
+  content: {
+    title?: string;
+    subtitle?: string;
+    description?: string;
+    items?: Array<{
+      id: string;
+      title: string;
+      description: string;
+      icon?: string;
+    }>;
+    buttonText?: string;
+    buttonLink?: string;
+    backgroundColor?: 'white' | 'slate' | 'dark';
+  };
+}
+
 interface ContentContextType {
   content: Record<string, string>;
   isEditMode: boolean;
@@ -35,6 +56,11 @@ interface ContentContextType {
   updateButtonConfig: (buttonId: string, config: Partial<ButtonConfig>) => void;
   isElementVisible: (elementId: string) => boolean;
   toggleElementVisibility: (elementId: string) => void;
+  getCustomSections: () => CustomSection[];
+  addCustomSection: (type: CustomSection['type'], name: string) => string;
+  updateCustomSection: (id: string, updates: Partial<CustomSection>) => void;
+  deleteCustomSection: (id: string) => void;
+  duplicateSection: (sectionId: string) => string | null;
 }
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
@@ -188,6 +214,132 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     updateContent(visibilityKey, current ? 'false' : 'true');
   };
 
+  const getCustomSections = (): CustomSection[] => {
+    const sectionsKey = '_custom_sections';
+    const stored = getContent(sectionsKey, '[]');
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return [];
+    }
+  };
+
+  const saveCustomSections = (sections: CustomSection[]) => {
+    updateContent('_custom_sections', JSON.stringify(sections));
+  };
+
+  const generateId = () => `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+  const getDefaultContent = (type: CustomSection['type']): CustomSection['content'] => {
+    switch (type) {
+      case 'text':
+        return {
+          title: 'New Text Section',
+          description: 'Add your content here. Click to edit this text.',
+          backgroundColor: 'white'
+        };
+      case 'features':
+        return {
+          title: 'Features',
+          subtitle: 'What We Offer',
+          items: [
+            { id: generateId(), title: 'Feature 1', description: 'Description of feature 1' },
+            { id: generateId(), title: 'Feature 2', description: 'Description of feature 2' },
+            { id: generateId(), title: 'Feature 3', description: 'Description of feature 3' },
+          ],
+          backgroundColor: 'slate'
+        };
+      case 'cta':
+        return {
+          title: 'Ready to Get Started?',
+          description: 'Take action today and see the difference.',
+          buttonText: 'Get Started',
+          buttonLink: '#contact',
+          backgroundColor: 'dark'
+        };
+      case 'testimonial':
+        return {
+          title: 'What Our Clients Say',
+          items: [
+            { id: generateId(), title: 'John Doe', description: 'This service exceeded my expectations!' },
+          ],
+          backgroundColor: 'white'
+        };
+      case 'gallery':
+        return {
+          title: 'Our Work',
+          subtitle: 'See what we\'ve accomplished',
+          items: [],
+          backgroundColor: 'slate'
+        };
+      default:
+        return { title: 'New Section', backgroundColor: 'white' };
+    }
+  };
+
+  const addCustomSection = (type: CustomSection['type'], name: string): string => {
+    const id = generateId();
+    const newSection: CustomSection = {
+      id,
+      type,
+      name: name || `New ${type} Section`,
+      visible: true,
+      content: getDefaultContent(type)
+    };
+    
+    const sections = getCustomSections();
+    sections.push(newSection);
+    saveCustomSections(sections);
+    
+    const order = getSectionOrder();
+    order.push(id);
+    saveSectionOrder(order);
+    
+    return id;
+  };
+
+  const updateCustomSection = (id: string, updates: Partial<CustomSection>) => {
+    const sections = getCustomSections();
+    const index = sections.findIndex(s => s.id === id);
+    if (index !== -1) {
+      sections[index] = { ...sections[index], ...updates };
+      saveCustomSections(sections);
+    }
+  };
+
+  const deleteCustomSection = (id: string) => {
+    const sections = getCustomSections().filter(s => s.id !== id);
+    saveCustomSections(sections);
+    
+    const order = getSectionOrder().filter(sId => sId !== id);
+    saveSectionOrder(order);
+  };
+
+  const duplicateSection = (sectionId: string): string | null => {
+    const sections = getCustomSections();
+    const section = sections.find(s => s.id === sectionId);
+    
+    if (section) {
+      const newId = generateId();
+      const duplicated: CustomSection = {
+        ...section,
+        id: newId,
+        name: `${section.name} (Copy)`,
+        content: JSON.parse(JSON.stringify(section.content))
+      };
+      sections.push(duplicated);
+      saveCustomSections(sections);
+      
+      const order = getSectionOrder();
+      const originalIndex = order.indexOf(sectionId);
+      order.splice(originalIndex + 1, 0, newId);
+      saveSectionOrder(order);
+      
+      return newId;
+    }
+    return null;
+  };
+
   const saveAllChanges = async (): Promise<{ success: boolean; message: string }> => {
     const token = getToken();
     if (!token) {
@@ -260,7 +412,12 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       getButtonConfig,
       updateButtonConfig,
       isElementVisible,
-      toggleElementVisibility
+      toggleElementVisibility,
+      getCustomSections,
+      addCustomSection,
+      updateCustomSection,
+      deleteCustomSection,
+      duplicateSection
     }}>
       {children}
     </ContentContext.Provider>
