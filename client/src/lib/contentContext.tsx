@@ -1,6 +1,20 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { useAdmin } from './adminContext';
 
+interface SectionConfig {
+  id: string;
+  visible: boolean;
+  order: number;
+  name: string;
+}
+
+interface ButtonConfig {
+  text: string;
+  link?: string;
+  visible: boolean;
+  style?: 'primary' | 'secondary' | 'outline' | 'ghost';
+}
+
 interface ContentContextType {
   content: Record<string, string>;
   isEditMode: boolean;
@@ -10,9 +24,22 @@ interface ContentContextType {
   saveAllChanges: () => Promise<{ success: boolean; message: string }>;
   hasUnsavedChanges: boolean;
   pendingChanges: Record<string, string>;
+  getSectionConfig: (sectionId: string, defaultConfig: SectionConfig) => SectionConfig;
+  updateSectionConfig: (sectionId: string, config: Partial<SectionConfig>) => void;
+  getSectionOrder: () => string[];
+  moveSectionUp: (sectionId: string) => void;
+  moveSectionDown: (sectionId: string) => void;
+  isSectionVisible: (sectionId: string) => boolean;
+  toggleSectionVisibility: (sectionId: string) => void;
+  getButtonConfig: (buttonId: string, defaultConfig: ButtonConfig) => ButtonConfig;
+  updateButtonConfig: (buttonId: string, config: Partial<ButtonConfig>) => void;
+  isElementVisible: (elementId: string) => boolean;
+  toggleElementVisibility: (elementId: string) => void;
 }
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
+
+const DEFAULT_SECTION_ORDER = ['hero', 'services', 'buyers', 'process', 'faq', 'stories', 'contact'];
 
 export function ContentProvider({ children }: { children: ReactNode }) {
   const { isAdmin, getToken } = useAdmin();
@@ -58,6 +85,107 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       ...prev,
       [id]: value
     }));
+  };
+
+  const getSectionConfig = (sectionId: string, defaultConfig: SectionConfig): SectionConfig => {
+    const configKey = `_section_${sectionId}`;
+    const stored = getContent(configKey, '');
+    if (stored) {
+      try {
+        return { ...defaultConfig, ...JSON.parse(stored) };
+      } catch {
+        return defaultConfig;
+      }
+    }
+    return defaultConfig;
+  };
+
+  const updateSectionConfig = (sectionId: string, config: Partial<SectionConfig>) => {
+    const configKey = `_section_${sectionId}`;
+    const current = getSectionConfig(sectionId, { id: sectionId, visible: true, order: 0, name: sectionId });
+    const updated = { ...current, ...config };
+    updateContent(configKey, JSON.stringify(updated));
+  };
+
+  const getSectionOrder = (): string[] => {
+    const orderKey = '_section_order';
+    const stored = getContent(orderKey, '');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return DEFAULT_SECTION_ORDER;
+      }
+    }
+    return DEFAULT_SECTION_ORDER;
+  };
+
+  const saveSectionOrder = (order: string[]) => {
+    updateContent('_section_order', JSON.stringify(order));
+  };
+
+  const moveSectionUp = (sectionId: string) => {
+    const order = getSectionOrder();
+    const index = order.indexOf(sectionId);
+    if (index > 0) {
+      const newOrder = [...order];
+      [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+      saveSectionOrder(newOrder);
+    }
+  };
+
+  const moveSectionDown = (sectionId: string) => {
+    const order = getSectionOrder();
+    const index = order.indexOf(sectionId);
+    if (index < order.length - 1) {
+      const newOrder = [...order];
+      [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+      saveSectionOrder(newOrder);
+    }
+  };
+
+  const isSectionVisible = (sectionId: string): boolean => {
+    const visibilityKey = `_visible_section_${sectionId}`;
+    const stored = getContent(visibilityKey, 'true');
+    return stored !== 'false';
+  };
+
+  const toggleSectionVisibility = (sectionId: string) => {
+    const visibilityKey = `_visible_section_${sectionId}`;
+    const current = isSectionVisible(sectionId);
+    updateContent(visibilityKey, current ? 'false' : 'true');
+  };
+
+  const getButtonConfig = (buttonId: string, defaultConfig: ButtonConfig): ButtonConfig => {
+    const configKey = `_button_${buttonId}`;
+    const stored = getContent(configKey, '');
+    if (stored) {
+      try {
+        return { ...defaultConfig, ...JSON.parse(stored) };
+      } catch {
+        return defaultConfig;
+      }
+    }
+    return defaultConfig;
+  };
+
+  const updateButtonConfig = (buttonId: string, config: Partial<ButtonConfig>) => {
+    const configKey = `_button_${buttonId}`;
+    const current = getButtonConfig(buttonId, { text: '', visible: true });
+    const updated = { ...current, ...config };
+    updateContent(configKey, JSON.stringify(updated));
+  };
+
+  const isElementVisible = (elementId: string): boolean => {
+    const visibilityKey = `_visible_${elementId}`;
+    const stored = getContent(visibilityKey, 'true');
+    return stored !== 'false';
+  };
+
+  const toggleElementVisibility = (elementId: string) => {
+    const visibilityKey = `_visible_${elementId}`;
+    const current = isElementVisible(elementId);
+    updateContent(visibilityKey, current ? 'false' : 'true');
   };
 
   const saveAllChanges = async (): Promise<{ success: boolean; message: string }> => {
@@ -121,7 +249,18 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       updateContent,
       saveAllChanges,
       hasUnsavedChanges,
-      pendingChanges
+      pendingChanges,
+      getSectionConfig,
+      updateSectionConfig,
+      getSectionOrder,
+      moveSectionUp,
+      moveSectionDown,
+      isSectionVisible,
+      toggleSectionVisibility,
+      getButtonConfig,
+      updateButtonConfig,
+      isElementVisible,
+      toggleElementVisibility
     }}>
       {children}
     </ContentContext.Provider>

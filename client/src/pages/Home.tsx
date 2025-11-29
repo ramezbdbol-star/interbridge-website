@@ -6,6 +6,12 @@ import { useToast } from '@/hooks/use-toast';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { 
+  EditableText, 
+  EditableSection, 
+  EditableButton, 
+  EditableContainer 
+} from '@/components/EditableComponents';
+import { 
   Globe, 
   Factory, 
   Search, 
@@ -33,60 +39,12 @@ import {
   LogOut,
   Loader2,
   CheckCircle,
-  Send
+  Send,
+  Eye,
+  EyeOff,
+  Layers
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-interface EditableTextProps {
-  id: string;
-  defaultText: string;
-  className?: string;
-  element?: 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'div';
-  multiline?: boolean;
-}
-
-function EditableText({ id, defaultText, className = '', element = 'span', multiline = false }: EditableTextProps) {
-  const { isEditMode, getContent, updateContent } = useContent();
-  const text = getContent(id, defaultText);
-  
-  const Element = element;
-
-  if (!isEditMode) {
-    if (element === 'h1') {
-      return <h1 className={className} dangerouslySetInnerHTML={{ __html: text.replace(/\n/g, '<br/>') }} />;
-    }
-    if (element === 'h2') {
-      return <h2 className={className} dangerouslySetInnerHTML={{ __html: text.replace(/\n/g, '<br/>') }} />;
-    }
-    if (element === 'h3') {
-      return <h3 className={className} dangerouslySetInnerHTML={{ __html: text.replace(/\n/g, '<br/>') }} />;
-    }
-    if (element === 'h4') {
-      return <h4 className={className} dangerouslySetInnerHTML={{ __html: text.replace(/\n/g, '<br/>') }} />;
-    }
-    if (element === 'p') {
-      return <p className={className} dangerouslySetInnerHTML={{ __html: text.replace(/\n/g, '<br/>') }} />;
-    }
-    return <span className={className} dangerouslySetInnerHTML={{ __html: text.replace(/\n/g, '<br/>') }} />;
-  }
-
-  return (
-    <Element
-      contentEditable
-      suppressContentEditableWarning
-      onBlur={(e: React.FocusEvent<HTMLElement>) => {
-        const newText = e.currentTarget.innerText || '';
-        if (newText !== text) {
-          updateContent(id, newText);
-        }
-      }}
-      className={`${className} outline-none ring-2 ring-blue-400 ring-offset-2 bg-blue-50/50 rounded cursor-text`}
-      data-testid={`editable-${id}`}
-    >
-      {text}
-    </Element>
-  );
-}
 
 interface ContactFormData {
   firstName: string;
@@ -285,11 +243,76 @@ function ContactForm() {
   );
 }
 
+function SectionManager() {
+  const { getSectionOrder, isSectionVisible, toggleSectionVisibility, moveSectionUp, moveSectionDown } = useContent();
+  const order = getSectionOrder();
+  
+  const sectionNames: Record<string, string> = {
+    hero: 'Hero Banner',
+    services: 'Services',
+    buyers: 'For Buyers',
+    process: 'Our Process',
+    faq: 'FAQ & Pricing',
+    stories: 'Success Stories',
+    contact: 'Contact'
+  };
+
+  return (
+    <div className="fixed left-6 top-1/2 -translate-y-1/2 z-50 bg-white rounded-xl shadow-2xl border border-slate-200 p-3 max-w-[200px]">
+      <div className="flex items-center gap-2 pb-2 border-b border-slate-200 mb-2">
+        <Layers className="w-4 h-4 text-blue-600" />
+        <span className="text-sm font-bold text-slate-700">Sections</span>
+      </div>
+      <div className="space-y-1">
+        {order.map((sectionId, index) => {
+          const visible = isSectionVisible(sectionId);
+          return (
+            <div 
+              key={sectionId}
+              className={`flex items-center gap-1 p-1.5 rounded-lg ${visible ? 'bg-slate-50' : 'bg-red-50'}`}
+            >
+              <button
+                onClick={() => toggleSectionVisibility(sectionId)}
+                className={`p-1 rounded ${visible ? 'text-slate-600 hover:bg-slate-200' : 'text-red-500 hover:bg-red-100'}`}
+                title={visible ? 'Hide section' : 'Show section'}
+                data-testid={`manager-visibility-${sectionId}`}
+              >
+                {visible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+              </button>
+              <span className={`flex-1 text-xs font-medium truncate ${visible ? 'text-slate-700' : 'text-red-500 line-through'}`}>
+                {sectionNames[sectionId] || sectionId}
+              </span>
+              <div className="flex flex-col">
+                <button
+                  onClick={() => moveSectionUp(sectionId)}
+                  disabled={index === 0}
+                  className="p-0.5 text-slate-400 hover:text-slate-600 disabled:opacity-30"
+                  data-testid={`manager-up-${sectionId}`}
+                >
+                  <ChevronDown className="w-3 h-3 rotate-180" />
+                </button>
+                <button
+                  onClick={() => moveSectionDown(sectionId)}
+                  disabled={index === order.length - 1}
+                  className="p-0.5 text-slate-400 hover:text-slate-600 disabled:opacity-30"
+                  data-testid={`manager-down-${sectionId}`}
+                >
+                  <ChevronDown className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const { isAdmin, logout } = useAdmin();
-  const { isEditMode, setEditMode, saveAllChanges, hasUnsavedChanges } = useContent();
+  const { isEditMode, setEditMode, saveAllChanges, hasUnsavedChanges, getSectionOrder, isSectionVisible } = useContent();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isSaving, setIsSaving] = useState(false);
@@ -324,9 +347,33 @@ export default function Home() {
     });
   };
 
+  const sectionOrder = getSectionOrder();
+
+  const renderSection = (sectionId: string) => {
+    if (!isSectionVisible(sectionId) && !isEditMode) return null;
+    
+    switch (sectionId) {
+      case 'hero':
+        return <HeroSection key={sectionId} scrollToSection={scrollToSection} />;
+      case 'services':
+        return <ServicesSection key={sectionId} />;
+      case 'buyers':
+        return <BuyersSection key={sectionId} scrollToSection={scrollToSection} />;
+      case 'process':
+        return <ProcessSection key={sectionId} />;
+      case 'faq':
+        return <FaqSection key={sectionId} openFaq={openFaq} toggleFaq={toggleFaq} />;
+      case 'stories':
+        return <StoriesSection key={sectionId} />;
+      case 'contact':
+        return <ContactSection key={sectionId} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
-      {/* Admin Floating Toolbar */}
       {isAdmin && (
         <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2" data-testid="admin-toolbar">
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-2 flex flex-col gap-2">
@@ -367,7 +414,7 @@ export default function Home() {
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    Save
+                    Save ({Object.keys(useContent().pendingChanges || {}).length})
                   </>
                 )}
               </Button>
@@ -397,134 +444,158 @@ export default function Home() {
           </div>
           
           {isEditMode && (
-            <div className="bg-blue-600 text-white text-xs px-3 py-2 rounded-lg text-center">
-              Click any highlighted text to edit
+            <div className="bg-blue-600 text-white text-xs px-3 py-2 rounded-lg text-center max-w-[180px]">
+              <div className="font-medium mb-1">Edit Mode Active</div>
+              <div className="text-blue-200 text-[10px]">
+                Click text to edit • Hover for controls
+              </div>
             </div>
           )}
         </div>
       )}
 
-      {/* Navigation */}
-      <nav className="fixed w-full bg-white/95 backdrop-blur-md shadow-sm z-40 transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-20 items-center">
-            <div 
-              className="flex-shrink-0 flex items-center cursor-pointer" 
-              onClick={() => window.scrollTo(0,0)}
-              data-testid="link-logo"
-            >
-              <div className="w-10 h-10 bg-blue-900 rounded-lg flex items-center justify-center text-white mr-3">
-                <Globe size={24} />
-              </div>
-              <div className="flex flex-col">
-                <EditableText
-                  id="brand-name"
-                  defaultText="InterBridge"
-                  className="font-bold text-xl tracking-tight text-slate-900 leading-none"
-                  element="span"
-                />
-                <EditableText
-                  id="brand-tagline"
-                  defaultText="Trans & Trade"
-                  className="text-xs font-semibold text-blue-700 tracking-wider uppercase"
-                  element="span"
-                />
-              </div>
-            </div>
-            
-            {/* Desktop Menu */}
-            <div className="hidden lg:flex space-x-6 items-center gap-2">
-              <button 
-                onClick={() => scrollToSection('services')} 
-                className="text-slate-600 hover:text-blue-700 font-medium transition-colors"
-                data-testid="link-services"
-              >
-                Services
-              </button>
-              <button 
-                onClick={() => scrollToSection('buyers')} 
-                className="text-slate-600 hover:text-blue-700 font-medium transition-colors"
-                data-testid="link-buyers"
-              >
-                For You
-              </button>
-              <button 
-                onClick={() => scrollToSection('process')} 
-                className="text-slate-600 hover:text-blue-700 font-medium transition-colors"
-                data-testid="link-process"
-              >
-                Process
-              </button>
-              <button 
-                onClick={() => scrollToSection('faq')} 
-                className="text-slate-600 hover:text-blue-700 font-medium transition-colors"
-                data-testid="link-faq"
-              >
-                FAQ & Pricing
-              </button>
-              <button 
-                onClick={() => scrollToSection('contact')}
-                className="bg-blue-900 text-white px-6 py-2.5 rounded-full font-medium hover:bg-blue-800 transition-all shadow-lg hover:shadow-blue-900/20"
-                data-testid="button-get-quote"
-              >
-                Get a Quote
-              </button>
-            </div>
+      {isEditMode && <SectionManager />}
 
-            {/* Mobile Menu Button */}
-            <div className="lg:hidden flex items-center">
-              <button 
-                onClick={toggleMenu} 
-                className="text-slate-600 hover:text-blue-900 p-2"
-                data-testid="button-mobile-menu"
-              >
-                {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-              </button>
+      <Navigation 
+        scrollToSection={scrollToSection} 
+        isMenuOpen={isMenuOpen} 
+        toggleMenu={toggleMenu}
+      />
+
+      {sectionOrder.map(sectionId => renderSection(sectionId))}
+
+      <Footer />
+    </div>
+  );
+}
+
+function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: { 
+  scrollToSection: (id: string) => void; 
+  isMenuOpen: boolean; 
+  toggleMenu: () => void;
+}) {
+  const { isEditMode } = useContent();
+  
+  return (
+    <nav className="fixed w-full bg-white/95 backdrop-blur-md shadow-sm z-40 transition-all duration-300">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-20 items-center">
+          <div 
+            className="flex-shrink-0 flex items-center cursor-pointer" 
+            onClick={() => window.scrollTo(0,0)}
+            data-testid="link-logo"
+          >
+            <div className="w-10 h-10 bg-blue-900 rounded-lg flex items-center justify-center text-white mr-3">
+              <Globe size={24} />
             </div>
+            <div className="flex flex-col">
+              <EditableText
+                id="brand-name"
+                defaultText="InterBridge"
+                className="font-bold text-xl tracking-tight text-slate-900 leading-none"
+                element="span"
+              />
+              <EditableText
+                id="brand-tagline"
+                defaultText="Trans & Trade"
+                className="text-xs font-semibold text-blue-700 tracking-wider uppercase"
+                element="span"
+              />
+            </div>
+          </div>
+          
+          <div className="hidden lg:flex space-x-6 items-center gap-2">
+            <EditableButton
+              id="nav-services"
+              defaultText="Services"
+              defaultLink="#services"
+              className="text-slate-600 hover:text-blue-700 font-medium transition-colors px-3 py-2"
+            />
+            <EditableButton
+              id="nav-buyers"
+              defaultText="For You"
+              defaultLink="#buyers"
+              className="text-slate-600 hover:text-blue-700 font-medium transition-colors px-3 py-2"
+            />
+            <EditableButton
+              id="nav-process"
+              defaultText="Process"
+              defaultLink="#process"
+              className="text-slate-600 hover:text-blue-700 font-medium transition-colors px-3 py-2"
+            />
+            <EditableButton
+              id="nav-faq"
+              defaultText="FAQ & Pricing"
+              defaultLink="#faq"
+              className="text-slate-600 hover:text-blue-700 font-medium transition-colors px-3 py-2"
+            />
+            <EditableButton
+              id="nav-cta"
+              defaultText="Get a Quote"
+              defaultLink="#contact"
+              className="bg-blue-900 text-white px-6 py-2.5 rounded-full font-medium hover:bg-blue-800 transition-all shadow-lg hover:shadow-blue-900/20"
+            />
+          </div>
+
+          <div className="lg:hidden flex items-center">
+            <button 
+              onClick={toggleMenu} 
+              className="text-slate-600 hover:text-blue-900 p-2"
+              data-testid="button-mobile-menu"
+            >
+              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
           </div>
         </div>
+      </div>
 
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="lg:hidden bg-white border-t border-slate-100 absolute w-full">
-            <div className="px-4 pt-2 pb-6 space-y-2 shadow-xl">
-              <button 
-                onClick={() => scrollToSection('services')} 
-                className="block w-full text-left px-3 py-3 text-slate-600 font-medium border-b border-slate-50"
-              >
-                Main Services
-              </button>
-              <button 
-                onClick={() => scrollToSection('buyers')} 
-                className="block w-full text-left px-3 py-3 text-slate-600 font-medium border-b border-slate-50"
-              >
-                Buyer Types
-              </button>
-              <button 
-                onClick={() => scrollToSection('process')} 
-                className="block w-full text-left px-3 py-3 text-slate-600 font-medium border-b border-slate-50"
-              >
-                Our Process
-              </button>
-              <button 
-                onClick={() => scrollToSection('faq')} 
-                className="block w-full text-left px-3 py-3 text-slate-600 font-medium border-b border-slate-50"
-              >
-                FAQ & Pricing
-              </button>
-              <button 
-                onClick={() => scrollToSection('contact')} 
-                className="block w-full text-left px-3 py-3 text-blue-700 font-bold"
-              >
-                Contact Us
-              </button>
-            </div>
+      {isMenuOpen && (
+        <div className="lg:hidden bg-white border-t border-slate-100 absolute w-full">
+          <div className="px-4 pt-2 pb-6 space-y-2 shadow-xl">
+            <button 
+              onClick={() => scrollToSection('services')} 
+              className="block w-full text-left px-3 py-3 text-slate-600 font-medium border-b border-slate-50"
+            >
+              Main Services
+            </button>
+            <button 
+              onClick={() => scrollToSection('buyers')} 
+              className="block w-full text-left px-3 py-3 text-slate-600 font-medium border-b border-slate-50"
+            >
+              Buyer Types
+            </button>
+            <button 
+              onClick={() => scrollToSection('process')} 
+              className="block w-full text-left px-3 py-3 text-slate-600 font-medium border-b border-slate-50"
+            >
+              Our Process
+            </button>
+            <button 
+              onClick={() => scrollToSection('faq')} 
+              className="block w-full text-left px-3 py-3 text-slate-600 font-medium border-b border-slate-50"
+            >
+              FAQ & Pricing
+            </button>
+            <button 
+              onClick={() => scrollToSection('contact')} 
+              className="block w-full text-left px-3 py-3 text-blue-700 font-bold"
+            >
+              Contact Us
+            </button>
           </div>
-        )}
-      </nav>
+        </div>
+      )}
+    </nav>
+  );
+}
 
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white overflow-hidden">
+function HeroSection({ scrollToSection }: { scrollToSection: (id: string) => void }) {
+  const { isEditMode, isSectionVisible } = useContent();
+  const visible = isSectionVisible('hero');
+
+  return (
+    <EditableSection id="hero" name="Hero">
+      <section className={`relative pt-32 pb-20 lg:pt-48 lg:pb-32 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 text-white overflow-hidden ${!visible && isEditMode ? 'opacity-40' : ''}`}>
         <div className="absolute inset-0 opacity-10">
           <svg className="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
             <path d="M0 100 C 20 0 50 0 100 100 Z" fill="white" />
@@ -534,15 +605,18 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
-              <div className="inline-flex items-center bg-blue-800/50 rounded-full px-4 py-1.5 border border-blue-700">
-                <span className="w-2 h-2 rounded-full bg-green-400 mr-2 animate-pulse"></span>
-                <EditableText
-                  id="hero-badge"
-                  defaultText="Bridging the Gap to Global Markets"
-                  className="text-sm font-medium tracking-wide text-blue-100"
-                  element="span"
-                />
-              </div>
+              <EditableContainer id="hero-badge-container" label="Badge">
+                <div className="inline-flex items-center bg-blue-800/50 rounded-full px-4 py-1.5 border border-blue-700">
+                  <span className="w-2 h-2 rounded-full bg-green-400 mr-2 animate-pulse"></span>
+                  <EditableText
+                    id="hero-badge"
+                    defaultText="Bridging the Gap to Global Markets"
+                    className="text-sm font-medium tracking-wide text-blue-100"
+                    element="span"
+                  />
+                </div>
+              </EditableContainer>
+              
               <EditableText
                 id="hero-headline"
                 defaultText="Direct Factory Access. Zero Middlemen."
@@ -555,742 +629,559 @@ export default function Home() {
                 element="p"
                 className="text-lg text-blue-100 max-w-xl leading-relaxed"
               />
+              
               <div className="flex flex-col sm:flex-row gap-4">
-                <button 
-                  onClick={() => scrollToSection('contact')} 
+                <EditableButton
+                  id="hero-cta-primary"
+                  defaultText="Start Sourcing"
+                  defaultLink="#contact"
                   className="bg-white text-blue-900 px-8 py-4 rounded-lg font-bold hover:bg-blue-50 transition-colors flex items-center justify-center"
-                  data-testid="button-start-sourcing"
-                >
-                  <EditableText id="hero-cta-primary" defaultText="Start Sourcing" />
-                  <ArrowRight className="ml-2" size={20} />
-                </button>
-                <button 
-                  onClick={() => scrollToSection('services')} 
+                  icon={<ArrowRight className="ml-2" size={20} />}
+                />
+                <EditableButton
+                  id="hero-cta-secondary"
+                  defaultText="View Services"
+                  defaultLink="#services"
                   className="border border-blue-400/30 bg-blue-900/20 backdrop-blur-sm text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-900/40 transition-colors"
-                  data-testid="button-view-services"
-                >
-                  <EditableText id="hero-cta-secondary" defaultText="View Services" />
-                </button>
+                />
               </div>
             </div>
             
-            {/* Hero Card Visualization */}
             <div className="hidden lg:block relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-cyan-300 rounded-2xl blur opacity-30"></div>
               <div className="relative bg-slate-800/80 backdrop-blur-xl border border-slate-700 p-8 rounded-2xl shadow-2xl">
                 <div className="space-y-6">
-                  <div className="flex items-start space-x-4">
-                    <div className="bg-blue-500/20 p-3 rounded-lg text-blue-300">
-                      <Factory size={32} />
+                  <EditableContainer id="hero-card-1" label="Feature 1">
+                    <div className="flex items-start space-x-4">
+                      <div className="bg-blue-500/20 p-3 rounded-lg text-blue-300">
+                        <Factory size={32} />
+                      </div>
+                      <div>
+                        <EditableText
+                          id="hero-card-1-title"
+                          defaultText="Factory Screening"
+                          element="h3"
+                          className="text-xl font-bold text-white"
+                        />
+                        <EditableText
+                          id="hero-card-1-desc"
+                          defaultText="Background checks, capacity verification, and direct price comparison."
+                          element="p"
+                          className="text-slate-300 text-sm mt-1"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <EditableText
-                        id="hero-card-1-title"
-                        defaultText="Factory Screening"
-                        element="h3"
-                        className="text-xl font-bold text-white"
-                      />
-                      <EditableText
-                        id="hero-card-1-desc"
-                        defaultText="Background checks, capacity verification, and direct price comparison."
-                        element="p"
-                        className="text-slate-300 text-sm mt-1"
-                      />
-                    </div>
-                  </div>
+                  </EditableContainer>
+                  
                   <div className="w-full h-px bg-slate-700"></div>
-                  <div className="flex items-start space-x-4">
-                    <div className="bg-amber-500/20 p-3 rounded-lg text-amber-300">
-                      <Languages size={32} />
+                  
+                  <EditableContainer id="hero-card-2" label="Feature 2">
+                    <div className="flex items-start space-x-4">
+                      <div className="bg-amber-500/20 p-3 rounded-lg text-amber-300">
+                        <Languages size={32} />
+                      </div>
+                      <div>
+                        <EditableText
+                          id="hero-card-2-title"
+                          defaultText="Bilingual Negotiation"
+                          element="h3"
+                          className="text-xl font-bold text-white"
+                        />
+                        <EditableText
+                          id="hero-card-2-desc"
+                          defaultText="Native-level Mandarin and English for confident deal-making."
+                          element="p"
+                          className="text-slate-300 text-sm mt-1"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <EditableText
-                        id="hero-card-2-title"
-                        defaultText="Bilingual Negotiation"
-                        element="h3"
-                        className="text-xl font-bold text-white"
-                      />
-                      <EditableText
-                        id="hero-card-2-desc"
-                        defaultText="Contract review and communication support in English & Chinese."
-                        element="p"
-                        className="text-slate-300 text-sm mt-1"
-                      />
-                    </div>
-                  </div>
+                  </EditableContainer>
+                  
                   <div className="w-full h-px bg-slate-700"></div>
-                  <div className="flex items-start space-x-4">
-                    <div className="bg-emerald-500/20 p-3 rounded-lg text-emerald-300">
-                      <ShieldCheck size={32} />
+                  
+                  <EditableContainer id="hero-card-3" label="Feature 3">
+                    <div className="flex items-start space-x-4">
+                      <div className="bg-green-500/20 p-3 rounded-lg text-green-300">
+                        <ShieldCheck size={32} />
+                      </div>
+                      <div>
+                        <EditableText
+                          id="hero-card-3-title"
+                          defaultText="Quality Assurance"
+                          element="h3"
+                          className="text-xl font-bold text-white"
+                        />
+                        <EditableText
+                          id="hero-card-3-desc"
+                          defaultText="On-site inspections before shipment to protect your investment."
+                          element="p"
+                          className="text-slate-300 text-sm mt-1"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <EditableText
-                        id="hero-card-3-title"
-                        defaultText="Risk Reduction"
-                        element="h3"
-                        className="text-xl font-bold text-white"
-                      />
-                      <EditableText
-                        id="hero-card-3-desc"
-                        defaultText="IQC/FQC inspections and secure payment method advice."
-                        element="p"
-                        className="text-slate-300 text-sm mt-1"
-                      />
-                    </div>
-                  </div>
+                  </EditableContainer>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </section>
+    </EditableSection>
+  );
+}
 
-      {/* Main Services Grid */}
-      <section id="services" className="py-24 bg-white">
+function ServicesSection() {
+  const { isEditMode, isSectionVisible, isElementVisible } = useContent();
+  const visible = isSectionVisible('services');
+
+  const services = [
+    { id: 'service-1', icon: <Search size={28} />, color: 'blue' },
+    { id: 'service-2', icon: <Factory size={28} />, color: 'amber' },
+    { id: 'service-3', icon: <Languages size={28} />, color: 'green' },
+    { id: 'service-4', icon: <ShieldCheck size={28} />, color: 'purple' },
+  ];
+
+  const defaultServices = [
+    { title: 'Sourcing & Screening', desc: 'We identify, vet, and compare multiple factories. Get transparent quotes and factory profiles tailored to your product needs.' },
+    { title: 'OEM/ODM Development', desc: 'From concept to production, we manage the entire product development cycle with trusted manufacturing partners.' },
+    { title: 'Interpretation & Factory Visits', desc: 'Travel with confidence. We provide on-ground translation and accompany you during factory tours and negotiations.' },
+    { title: 'Quality Control', desc: 'Pre-shipment inspections, production monitoring, and defect reporting to ensure your order meets specifications.' },
+  ];
+
+  return (
+    <EditableSection id="services" name="Services">
+      <section id="services" className={`py-24 bg-white ${!visible && isEditMode ? 'opacity-40' : ''}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <EditableText
-              id="services-label"
-              defaultText="What I Can Do"
-              className="text-blue-600 font-semibold tracking-wider uppercase text-sm"
+              id="services-badge"
+              defaultText="What We Do"
+              className="text-blue-700 font-bold uppercase tracking-widest text-sm"
               element="span"
             />
             <EditableText
               id="services-title"
-              defaultText="Comprehensive Trade Services"
+              defaultText="End-to-End Import Solutions"
               element="h2"
-              className="text-3xl md:text-4xl font-bold text-slate-900 mt-2 mb-4"
+              className="text-4xl font-extrabold text-slate-900 mt-4"
             />
             <EditableText
               id="services-subtitle"
-              defaultText="A full suite of services designed to make your import business safe, transparent, and scalable."
+              defaultText="From factory discovery to delivered goods, we handle every step of your China sourcing journey."
               element="p"
-              className="text-slate-600 max-w-2xl mx-auto"
+              className="text-slate-600 text-lg mt-4 max-w-2xl mx-auto"
             />
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Service 1 */}
-            <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 hover:border-blue-200 transition-all hover:shadow-lg group">
-              <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center text-blue-700 mb-6 group-hover:bg-blue-700 group-hover:text-white transition-colors">
-                <Search size={24} />
-              </div>
-              <EditableText
-                id="service-1-title"
-                defaultText="Factory & Supplier Screening"
-                element="h3"
-                className="text-xl font-bold text-slate-900 mb-3"
-              />
-              <EditableText
-                id="service-1-desc"
-                defaultText="Background checks, capacity/equipment verification, and price comparisons to ensure you deal with legitimate manufacturers."
-                element="p"
-                className="text-slate-600 text-sm leading-relaxed"
-              />
-            </div>
-
-            {/* Service 2 */}
-            <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 hover:border-blue-200 transition-all hover:shadow-lg group">
-              <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center text-blue-700 mb-6 group-hover:bg-blue-700 group-hover:text-white transition-colors">
-                <LayoutList size={24} />
-              </div>
-              <EditableText
-                id="service-2-title"
-                defaultText="Sample Management"
-                element="h3"
-                className="text-xl font-bold text-slate-900 mb-3"
-              />
-              <EditableText
-                id="service-2-desc"
-                defaultText="Sample placement, optimization feedback, and confirmation of the sampling process to ensure the product meets your vision."
-                element="p"
-                className="text-slate-600 text-sm leading-relaxed"
-              />
-            </div>
-
-            {/* Service 3 */}
-            <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 hover:border-blue-200 transition-all hover:shadow-lg group">
-              <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center text-blue-700 mb-6 group-hover:bg-blue-700 group-hover:text-white transition-colors">
-                <ShieldCheck size={24} />
-              </div>
-              <EditableText
-                id="service-3-title"
-                defaultText="Quality Control"
-                element="h3"
-                className="text-xl font-bold text-slate-900 mb-3"
-              />
-              <EditableText
-                id="service-3-desc"
-                defaultText="Incoming inspection (IQC), Final QC (FQC), Container Loading Checks, and coordination of third-party testing."
-                element="p"
-                className="text-slate-600 text-sm leading-relaxed"
-              />
-            </div>
-
-             {/* Service 4 */}
-             <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 hover:border-blue-200 transition-all hover:shadow-lg group">
-              <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center text-blue-700 mb-6 group-hover:bg-blue-700 group-hover:text-white transition-colors">
-                <TrendingUp size={24} />
-              </div>
-              <EditableText
-                id="service-4-title"
-                defaultText="Production Tracking"
-                element="h3"
-                className="text-xl font-bold text-slate-900 mb-3"
-              />
-              <EditableText
-                id="service-4-desc"
-                defaultText="Order placement, regular production progress reports, and photo/video acceptance at key stages."
-                element="p"
-                className="text-slate-600 text-sm leading-relaxed"
-              />
-            </div>
-
-            {/* Service 5 */}
-            <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 hover:border-blue-200 transition-all hover:shadow-lg group">
-              <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center text-blue-700 mb-6 group-hover:bg-blue-700 group-hover:text-white transition-colors">
-                <Ship size={24} />
-              </div>
-              <EditableText
-                id="service-5-title"
-                defaultText="Logistics & Customs"
-                element="h3"
-                className="text-xl font-bold text-slate-900 mb-3"
-              />
-              <EditableText
-                id="service-5-desc"
-                defaultText="Comparison of FOB/CIF/DDP options and assistance with LCL/FCL customs clearance advice."
-                element="p"
-                className="text-slate-600 text-sm leading-relaxed"
-              />
-            </div>
-
-            {/* Service 6 */}
-            <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 hover:border-blue-200 transition-all hover:shadow-lg group">
-              <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center text-blue-700 mb-6 group-hover:bg-blue-700 group-hover:text-white transition-colors">
-                <FileText size={24} />
-              </div>
-              <EditableText
-                id="service-6-title"
-                defaultText="Negotiation & Contracts"
-                element="h3"
-                className="text-xl font-bold text-slate-900 mb-3"
-              />
-              <EditableText
-                id="service-6-desc"
-                defaultText="Advising on phased payments, third-party escrow/letters of credit, and contract review to reduce risk."
-                element="p"
-                className="text-slate-600 text-sm leading-relaxed"
-              />
-            </div>
-
-            {/* Service 7 (Full width) */}
-            <div className="md:col-span-2 lg:col-span-3 bg-blue-900 rounded-xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 text-white shadow-xl">
-              <div className="mb-6 md:mb-0 md:mr-8">
-                <h3 className="text-2xl font-bold mb-2 flex items-center">
-                  <Package className="mr-3 text-amber-400" /> 
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {services.map((service, i) => (
+              <EditableContainer key={service.id} id={service.id} label={`Service ${i + 1}`}>
+                <div className="bg-slate-50 rounded-2xl p-8 hover:shadow-xl transition-all duration-300 border border-slate-100 group h-full">
+                  <div className={`bg-${service.color}-100 w-16 h-16 rounded-xl flex items-center justify-center text-${service.color}-600 mb-6 group-hover:scale-110 transition-transform`}>
+                    {service.icon}
+                  </div>
                   <EditableText
-                    id="service-7-title"
-                    defaultText="Small-Batch / OEM / ODM Support"
+                    id={`${service.id}-title`}
+                    defaultText={defaultServices[i].title}
+                    element="h3"
+                    className="text-xl font-bold text-slate-900 mb-3"
                   />
-                </h3>
-                <EditableText
-                  id="service-7-desc"
-                  defaultText="We accept orders for small-volume purchases and support custom branding projects, helping you validate the market before scaling up."
-                  element="p"
-                  className="text-blue-100"
-                />
-              </div>
-              <button 
-                onClick={() => scrollToSection('contact')} 
-                className="bg-white text-blue-900 px-8 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors whitespace-nowrap"
-              >
-                <EditableText id="service-7-cta" defaultText="Start Your Project" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Why Choose Me / Value Props */}
-      <section id="buyers" className="py-24 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div>
-              <EditableText
-                id="why-label"
-                defaultText="Why Choose InterBridge?"
-                className="text-blue-600 font-semibold tracking-wider uppercase text-sm"
-                element="span"
-              />
-              <EditableText
-                id="why-title"
-                defaultText="Built on Trust & Transparency"
-                element="h2"
-                className="text-3xl md:text-4xl font-bold text-slate-900 mt-2 mb-6"
-              />
-              
-              <div className="space-y-8">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-900 text-white">
-                      <Languages size={24} />
-                    </div>
-                  </div>
-                  <div className="ml-4">
-                    <EditableText
-                      id="why-1-title"
-                      defaultText="Bilingual Communication"
-                      element="h3"
-                      className="text-lg font-medium text-slate-900"
-                    />
-                    <EditableText
-                      id="why-1-desc"
-                      defaultText="Seamless communication in English and Chinese to prevent misunderstandings."
-                      element="p"
-                      className="mt-2 text-slate-600"
-                    />
-                  </div>
+                  <EditableText
+                    id={`${service.id}-desc`}
+                    defaultText={defaultServices[i].desc}
+                    element="p"
+                    className="text-slate-600 leading-relaxed"
+                  />
                 </div>
-
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-900 text-white">
-                      <MapPin size={24} />
-                    </div>
-                  </div>
-                  <div className="ml-4">
-                    <EditableText
-                      id="why-2-title"
-                      defaultText="Major Area Coverage"
-                      element="h3"
-                      className="text-lg font-medium text-slate-900"
-                    />
-                    <EditableText
-                      id="why-2-desc"
-                      defaultText="Familiar with SMEs and supply chain logic across China's major manufacturing hubs."
-                      element="p"
-                      className="mt-2 text-slate-600"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <div className="flex items-center justify-center h-12 w-12 rounded-md bg-blue-900 text-white">
-                      <ZoomIn size={24} />
-                    </div>
-                  </div>
-                  <div className="ml-4">
-                    <EditableText
-                      id="why-3-title"
-                      defaultText="Traceability & Transparency"
-                      element="h3"
-                      className="text-lg font-medium text-slate-900"
-                    />
-                    <EditableText
-                      id="why-3-desc"
-                      defaultText="Production evidence (photos/videos/test reports) delivered in stages so you always know the status."
-                      element="p"
-                      className="mt-2 text-slate-600"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
-               <EditableText
-                 id="perfect-for-title"
-                 defaultText="We Are Perfect For"
-                 element="h3"
-                 className="text-2xl font-bold text-slate-900 mb-6 text-center"
-               />
-               <div className="space-y-4">
-                 <div className="flex items-center p-4 bg-slate-50 rounded-lg border border-slate-100">
-                    <div className="bg-green-100 p-2 rounded-full mr-4 text-green-700"><Users size={20}/></div>
-                    <div>
-                      <EditableText
-                        id="buyer-1-title"
-                        defaultText="E-Commerce Sellers"
-                        element="h4"
-                        className="font-bold text-slate-800"
-                      />
-                      <EditableText
-                        id="buyer-1-desc"
-                        defaultText="New to overseas sourcing or wanting small-batch, diverse product validation."
-                        element="p"
-                        className="text-xs text-slate-500"
-                      />
-                    </div>
-                 </div>
-                 <div className="flex items-center p-4 bg-slate-50 rounded-lg border border-slate-100">
-                    <div className="bg-purple-100 p-2 rounded-full mr-4 text-purple-700"><Star size={20}/></div>
-                    <div>
-                      <EditableText
-                        id="buyer-2-title"
-                        defaultText="Brand Owners"
-                        element="h4"
-                        className="font-bold text-slate-800"
-                      />
-                      <EditableText
-                        id="buyer-2-desc"
-                        defaultText="With existing designs/brands but needing to find suitable manufacturers."
-                        element="p"
-                        className="text-xs text-slate-500"
-                      />
-                    </div>
-                 </div>
-                 <div className="flex items-center p-4 bg-slate-50 rounded-lg border border-slate-100">
-                    <div className="bg-amber-100 p-2 rounded-full mr-4 text-amber-700"><TrendingUp size={20}/></div>
-                    <div>
-                      <EditableText
-                        id="buyer-3-title"
-                        defaultText="Smart Importers"
-                        element="h4"
-                        className="font-bold text-slate-800"
-                      />
-                      <EditableText
-                        id="buyer-3-desc"
-                        defaultText="Looking to replace unreliable suppliers, optimize costs, or improve quality."
-                        element="p"
-                        className="text-xs text-slate-500"
-                      />
-                    </div>
-                 </div>
-               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 5-Step Process Section */}
-      <section id="process" className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <EditableText
-              id="process-title"
-              defaultText="Typical 5-Step Process"
-              element="h2"
-              className="text-3xl md:text-4xl font-bold text-slate-900"
-            />
-            <EditableText
-              id="process-subtitle"
-              defaultText="A clear path from requirement to delivery."
-              element="p"
-              className="text-slate-600 mt-4"
-            />
-          </div>
-          
-          <div className="grid md:grid-cols-5 gap-6">
-            {[
-              { step: "01", titleId: "step-1-title", defaultTitle: "Requirements", descId: "step-1-desc", defaultDesc: "You provide product details, target price, MOQ, delivery date, and quality specs." },
-              { step: "02", titleId: "step-2-title", defaultTitle: "Screening", descId: "step-2-desc", defaultDesc: "I screen factories at the production site and provide 2–4 Supplier Options & Comparison Report." },
-              { step: "03", titleId: "step-3-title", defaultTitle: "Sampling", descId: "step-3-desc", defaultDesc: "After supplier confirmation, arrange sampling and provide feedback until approval." },
-              { step: "04", titleId: "step-4-title", defaultTitle: "Production", descId: "step-4-desc", defaultDesc: "Follow up on mass production and arrange phased testing/photo/video reports." },
-              { step: "05", titleId: "step-5-title", defaultTitle: "Delivery", descId: "step-5-desc", defaultDesc: "Inspection, shipment arrangement, customs clearance, and complete documentation." },
-            ].map((item, index) => (
-              <div 
-                key={index} 
-                className="bg-slate-50 p-6 rounded-xl border border-slate-200 hover:border-blue-400 transition-colors relative group"
-              >
-                <div className="text-4xl font-extrabold text-blue-100 mb-4 group-hover:text-blue-200 transition-colors">{item.step}</div>
-                <EditableText
-                  id={item.titleId}
-                  defaultText={item.defaultTitle}
-                  element="h3"
-                  className="text-lg font-bold text-slate-900 mb-3"
-                />
-                <EditableText
-                  id={item.descId}
-                  defaultText={item.defaultDesc}
-                  element="p"
-                  className="text-slate-600 text-xs leading-relaxed"
-                />
-              </div>
+              </EditableContainer>
             ))}
           </div>
         </div>
       </section>
+    </EditableSection>
+  );
+}
 
-      {/* Pricing & FAQ Section */}
-      <section id="faq" className="py-24 bg-slate-50">
-         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <EditableText
-                id="faq-title"
-                defaultText="Pricing & FAQs"
-                element="h2"
-                className="text-3xl md:text-4xl font-bold text-slate-900"
-              />
-              <EditableText
-                id="faq-subtitle"
-                defaultText="Transparent fees and answers to common questions."
-                element="p"
-                className="text-slate-600 mt-4"
-              />
-            </div>
+function BuyersSection({ scrollToSection }: { scrollToSection: (id: string) => void }) {
+  const { isEditMode, isSectionVisible } = useContent();
+  const visible = isSectionVisible('buyers');
 
-            {/* Pricing Card */}
-            <div className="bg-blue-900 text-white rounded-2xl p-8 mb-12 shadow-xl">
-               <div className="flex items-start flex-wrap gap-6">
-                  <div className="bg-blue-800 p-3 rounded-lg">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-400">
-                      <rect width="20" height="14" x="2" y="5" rx="2"/>
-                      <line x1="2" x2="22" y1="10" y2="10"/>
-                    </svg>
-                  </div>
-                  <div className="flex-1">
-                    <EditableText
-                      id="pricing-title"
-                      defaultText="Flexible Payment Methods"
-                      element="h3"
-                      className="text-xl font-bold mb-2"
-                    />
-                    <EditableText
-                      id="pricing-desc"
-                      defaultText="We support a fixed service fee per project, a commission based on transaction amount, or a mixed fee structure. Sample production costs are charged separately."
-                      element="p"
-                      className="text-blue-100 mb-4 text-sm leading-relaxed"
-                    />
-                    <div className="inline-block bg-blue-800 px-4 py-2 rounded-lg text-xs font-semibold text-amber-300 border border-blue-700">
-                      <EditableText
-                        id="pricing-note"
-                        defaultText="Specific pricing is based on complexity & workload and transparently written into the contract."
-                      />
-                    </div>
-                  </div>
-               </div>
-            </div>
+  const buyerTypes = [
+    { id: 'buyer-1', icon: <Package size={32} />, color: 'emerald' },
+    { id: 'buyer-2', icon: <TrendingUp size={32} />, color: 'blue' },
+    { id: 'buyer-3', icon: <Star size={32} />, color: 'amber' },
+  ];
 
-            {/* FAQ Accordion */}
-            <div className="space-y-4">
-               {[
-                 { qId: "faq-1-q", defaultQ: "What is the Minimum Order Quantity (MOQ)?", aId: "faq-1-a", defaultA: "It depends on the product. However, many products support small batches (e.g., tens to hundreds of pieces). We specialize in helping clients with small-volume needs." },
-                 { qId: "faq-2-q", defaultQ: "Is payment secure?", aId: "faq-2-a", defaultA: "Yes. We recommend phased payments and prioritize using third-party escrow or letters of credit to reduce risk for all parties." },
-                 { qId: "faq-3-q", defaultQ: "How long does it take to produce samples?", aId: "faq-3-a", defaultA: "Generally 7–21 days, depending on product complexity and the factory's current schedule." }
-               ].map((item, index) => (
-                 <div key={index} className="bg-white rounded-lg border border-slate-200 overflow-hidden">
-                    <button 
-                      onClick={() => toggleFaq(index)}
-                      className="w-full flex justify-between items-center p-5 text-left font-bold text-slate-800 hover:bg-slate-50 transition-colors"
-                    >
-                      <span className="flex items-center">
-                        <HelpCircle size={18} className="mr-3 text-blue-600"/>
-                        <EditableText id={item.qId} defaultText={item.defaultQ} />
-                      </span>
-                      <ChevronDown size={20} className={`transform transition-transform ${openFaq === index ? 'rotate-180' : ''}`} />
-                    </button>
-                    {openFaq === index && (
-                      <div className="p-5 pt-0 text-slate-600 text-sm bg-slate-50 border-t border-slate-100">
-                        <EditableText id={item.aId} defaultText={item.defaultA} element="p" />
-                      </div>
-                    )}
-                 </div>
-               ))}
-            </div>
-         </div>
-      </section>
+  const defaultBuyers = [
+    { title: 'Small Businesses', subtitle: '50-500 MOQ', desc: 'Need a reliable partner for smaller orders? We work with factories that accommodate lower minimums without compromising quality.' },
+    { title: 'Growing Brands', subtitle: '500-5000 MOQ', desc: 'Scaling up? We help you find the right balance of price, quality, and capacity as your order volumes grow.' },
+    { title: 'Established Enterprises', subtitle: '5000+ MOQ', desc: 'For large-scale production, we negotiate enterprise-level pricing and ensure consistent quality across bulk orders.' },
+  ];
 
-      {/* Success Stories Section */}
-      <section id="stories" className="py-24 bg-white relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-5 pointer-events-none">
-           <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-blue-900 mix-blend-multiply filter blur-3xl"></div>
-           <div className="absolute top-1/2 right-0 w-64 h-64 rounded-full bg-blue-600 mix-blend-multiply filter blur-3xl"></div>
-        </div>
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+  return (
+    <EditableSection id="buyers" name="For Buyers">
+      <section id="buyers" className={`py-24 bg-slate-50 ${!visible && isEditMode ? 'opacity-40' : ''}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <EditableText
-              id="stories-label"
-              defaultText="Proven Results"
-              className="text-blue-600 font-semibold tracking-wider uppercase text-sm"
+              id="buyers-badge"
+              defaultText="Who We Serve"
+              className="text-blue-700 font-bold uppercase tracking-widest text-sm"
               element="span"
             />
             <EditableText
-              id="stories-title"
-              defaultText="Success Stories"
+              id="buyers-title"
+              defaultText="Built for Businesses Like Yours"
               element="h2"
-              className="text-3xl md:text-4xl font-bold text-slate-900 mt-2 mb-4"
+              className="text-4xl font-extrabold text-slate-900 mt-4"
             />
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Testimonial 1 */}
-            <div className="bg-slate-50 p-8 rounded-2xl border border-slate-100 shadow-lg hover:shadow-xl transition-all relative group">
-              <div className="absolute top-6 right-8 text-blue-100 group-hover:text-blue-200 transition-colors">
-                <Quote size={64} />
-              </div>
-              <div className="relative z-10">
-                <div className="flex text-amber-400 mb-4">
-                  <Star size={18} fill="currentColor" />
-                  <Star size={18} fill="currentColor" />
-                  <Star size={18} fill="currentColor" />
-                  <Star size={18} fill="currentColor" />
-                  <Star size={18} fill="currentColor" />
+            {buyerTypes.map((buyer, i) => (
+              <EditableContainer key={buyer.id} id={buyer.id} label={`Buyer ${i + 1}`}>
+                <div className="bg-white rounded-2xl p-8 shadow-lg border border-slate-100 hover:border-blue-200 transition-all group h-full">
+                  <div className={`bg-${buyer.color}-100 w-16 h-16 rounded-xl flex items-center justify-center text-${buyer.color}-600 mb-6`}>
+                    {buyer.icon}
+                  </div>
+                  <EditableText
+                    id={`${buyer.id}-title`}
+                    defaultText={defaultBuyers[i].title}
+                    element="h3"
+                    className="text-2xl font-bold text-slate-900 mb-2"
+                  />
+                  <EditableText
+                    id={`${buyer.id}-subtitle`}
+                    defaultText={defaultBuyers[i].subtitle}
+                    element="span"
+                    className="text-blue-600 font-semibold text-sm"
+                  />
+                  <EditableText
+                    id={`${buyer.id}-desc`}
+                    defaultText={defaultBuyers[i].desc}
+                    element="p"
+                    className="text-slate-600 mt-4 leading-relaxed"
+                  />
                 </div>
-                <EditableText
-                  id="testimonial-1-quote"
-                  defaultText="InterBridge didn't just find a factory; they found one willing to do a low MOQ of 500 units for our launch. We couldn't have started without them."
-                  element="p"
-                  className="text-slate-700 italic mb-6 leading-relaxed"
-                />
-                <div className="flex items-center justify-between mt-8 border-t border-slate-200 pt-6">
-                   <div>
-                      <EditableText
-                        id="testimonial-1-name"
-                        defaultText="Sarah Jenkins"
-                        element="h4"
-                        className="font-bold text-slate-900"
-                      />
-                      <EditableText
-                        id="testimonial-1-role"
-                        defaultText="Founder, EcoHome Co."
-                        element="p"
-                        className="text-sm text-slate-500"
-                      />
-                   </div>
-                </div>
-              </div>
-            </div>
+              </EditableContainer>
+            ))}
+          </div>
 
-            {/* Testimonial 2 */}
-            <div className="bg-blue-900 p-8 rounded-2xl border border-blue-800 shadow-lg hover:shadow-xl transition-all relative group text-white">
-              <div className="absolute top-6 right-8 text-blue-800 group-hover:text-blue-700 transition-colors">
-                <Quote size={64} />
-              </div>
-              <div className="relative z-10">
-                <div className="flex text-amber-400 mb-4">
-                  <Star size={18} fill="currentColor" />
-                  <Star size={18} fill="currentColor" />
-                  <Star size={18} fill="currentColor" />
-                  <Star size={18} fill="currentColor" />
-                  <Star size={18} fill="currentColor" />
-                </div>
-                <EditableText
-                  id="testimonial-2-quote"
-                  defaultText="The Production Tracking reports were a game changer. I saw photos and videos at every stage, so I knew exactly what I was getting before shipment."
-                  element="p"
-                  className="text-blue-50 italic mb-6 leading-relaxed"
-                />
-                <div className="flex items-center justify-between mt-8 border-t border-blue-800 pt-6">
-                   <div>
-                      <EditableText
-                        id="testimonial-2-name"
-                        defaultText="David Chen"
-                        element="h4"
-                        className="font-bold"
-                      />
-                      <EditableText
-                        id="testimonial-2-role"
-                        defaultText="Procurement Lead"
-                        element="p"
-                        className="text-sm text-blue-300"
-                      />
-                   </div>
-                </div>
-              </div>
-            </div>
+          <div className="text-center mt-12">
+            <EditableButton
+              id="buyers-cta"
+              defaultText="Discuss Your Needs"
+              defaultLink="#contact"
+              className="bg-blue-900 text-white px-8 py-4 rounded-lg font-bold hover:bg-blue-800 transition-colors inline-flex items-center"
+              icon={<ArrowRight className="ml-2" size={20} />}
+            />
+          </div>
+        </div>
+      </section>
+    </EditableSection>
+  );
+}
 
-            {/* Testimonial 3 */}
-            <div className="bg-slate-50 p-8 rounded-2xl border border-slate-100 shadow-lg hover:shadow-xl transition-all relative group">
-              <div className="absolute top-6 right-8 text-blue-100 group-hover:text-blue-200 transition-colors">
-                <Quote size={64} />
-              </div>
-              <div className="relative z-10">
-                <div className="flex text-amber-400 mb-4">
-                  <Star size={18} fill="currentColor" />
-                  <Star size={18} fill="currentColor" />
-                  <Star size={18} fill="currentColor" />
-                  <Star size={18} fill="currentColor" />
-                  <Star size={18} fill="currentColor" />
-                </div>
-                <EditableText
-                  id="testimonial-3-quote"
-                  defaultText="I needed to replace an unreliable supplier. InterBridge's screening process gave me 3 solid options in a week. The Logistics advice on DDP saved me a ton of headache."
-                  element="p"
-                  className="text-slate-700 italic mb-6 leading-relaxed"
-                />
-                <div className="flex items-center justify-between mt-8 border-t border-slate-200 pt-6">
-                   <div>
-                      <EditableText
-                        id="testimonial-3-name"
-                        defaultText="Marcus Thorne"
-                        element="h4"
-                        className="font-bold text-slate-900"
-                      />
-                      <EditableText
-                        id="testimonial-3-role"
-                        defaultText="CEO, TechGear"
-                        element="p"
-                        className="text-sm text-slate-500"
-                      />
-                   </div>
-                </div>
-              </div>
+function ProcessSection() {
+  const { isEditMode, isSectionVisible } = useContent();
+  const visible = isSectionVisible('process');
+
+  const steps = [
+    { id: 'step-1', icon: <FileText size={24} />, num: '01' },
+    { id: 'step-2', icon: <Search size={24} />, num: '02' },
+    { id: 'step-3', icon: <Users size={24} />, num: '03' },
+    { id: 'step-4', icon: <ShieldCheck size={24} />, num: '04' },
+    { id: 'step-5', icon: <Ship size={24} />, num: '05' },
+  ];
+
+  const defaultSteps = [
+    { title: 'Share Your Requirements', desc: 'Tell us about your product, target price, and quantity.' },
+    { title: 'Factory Matching', desc: 'We screen and shortlist factories that fit your criteria.' },
+    { title: 'Negotiation & Samples', desc: 'We negotiate terms and arrange sample production.' },
+    { title: 'Quality Inspection', desc: 'Pre-shipment checks ensure your order meets standards.' },
+    { title: 'Logistics & Delivery', desc: 'We coordinate shipping to get your goods delivered.' },
+  ];
+
+  return (
+    <EditableSection id="process" name="Process">
+      <section id="process" className={`py-24 bg-white ${!visible && isEditMode ? 'opacity-40' : ''}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <EditableText
+              id="process-badge"
+              defaultText="How It Works"
+              className="text-blue-700 font-bold uppercase tracking-widest text-sm"
+              element="span"
+            />
+            <EditableText
+              id="process-title"
+              defaultText="Simple, Transparent Process"
+              element="h2"
+              className="text-4xl font-extrabold text-slate-900 mt-4"
+            />
+          </div>
+
+          <div className="relative">
+            <div className="hidden lg:block absolute top-1/2 left-0 right-0 h-1 bg-gradient-to-r from-blue-200 via-blue-400 to-blue-200 -translate-y-1/2"></div>
+            
+            <div className="grid lg:grid-cols-5 gap-8">
+              {steps.map((step, i) => (
+                <EditableContainer key={step.id} id={step.id} label={`Step ${i + 1}`}>
+                  <div className="relative bg-white rounded-xl p-6 text-center lg:pt-16">
+                    <div className="lg:absolute lg:top-0 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 bg-blue-900 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg shadow-lg mx-auto mb-4 lg:mb-0">
+                      {step.num}
+                    </div>
+                    <div className="bg-blue-50 w-12 h-12 rounded-lg flex items-center justify-center text-blue-600 mx-auto mb-4">
+                      {step.icon}
+                    </div>
+                    <EditableText
+                      id={`${step.id}-title`}
+                      defaultText={defaultSteps[i].title}
+                      element="h3"
+                      className="font-bold text-slate-900 mb-2"
+                    />
+                    <EditableText
+                      id={`${step.id}-desc`}
+                      defaultText={defaultSteps[i].desc}
+                      element="p"
+                      className="text-slate-600 text-sm"
+                    />
+                  </div>
+                </EditableContainer>
+              ))}
             </div>
           </div>
         </div>
       </section>
+    </EditableSection>
+  );
+}
 
-      {/* Contact Section */}
-      <section id="contact" className="py-24 bg-slate-900 text-white">
+function FaqSection({ openFaq, toggleFaq }: { openFaq: number | null; toggleFaq: (i: number) => void }) {
+  const { isEditMode, isSectionVisible } = useContent();
+  const visible = isSectionVisible('faq');
+
+  const faqs = [
+    { id: 'faq-1' },
+    { id: 'faq-2' },
+    { id: 'faq-3' },
+    { id: 'faq-4' },
+    { id: 'faq-5' },
+  ];
+
+  const defaultFaqs = [
+    { q: 'What are your service fees?', a: 'Our fees vary based on the scope of work. Sourcing typically starts at 5-8% of order value, with fixed fees for interpretation and QC services. Contact us for a custom quote.' },
+    { q: 'Do you handle shipping and customs?', a: 'We coordinate with trusted freight forwarders and can manage the logistics process. We also provide guidance on customs documentation.' },
+    { q: 'What if I need a very small order?', a: 'We work with factories that accept lower MOQs. While pricing per unit may be higher, we can still find quality suppliers for orders as low as 50 units.' },
+    { q: 'How do I know the factory is reliable?', a: 'We conduct thorough background checks, including business licenses, production capacity, and past export history. We also arrange factory visits when possible.' },
+    { q: 'Can you help with product development?', a: 'Yes! We support OEM/ODM projects from concept to production, including design refinement, sampling, and manufacturing.' },
+  ];
+
+  return (
+    <EditableSection id="faq" name="FAQ">
+      <section id="faq" className={`py-24 bg-slate-50 ${!visible && isEditMode ? 'opacity-40' : ''}`}>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <EditableText
+              id="faq-badge"
+              defaultText="Questions & Answers"
+              className="text-blue-700 font-bold uppercase tracking-widest text-sm"
+              element="span"
+            />
+            <EditableText
+              id="faq-title"
+              defaultText="Frequently Asked Questions"
+              element="h2"
+              className="text-4xl font-extrabold text-slate-900 mt-4"
+            />
+          </div>
+
+          <div className="space-y-4">
+            {faqs.map((faq, i) => (
+              <EditableContainer key={faq.id} id={faq.id} label={`FAQ ${i + 1}`}>
+                <div className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                  <button
+                    onClick={() => toggleFaq(i)}
+                    className="w-full px-6 py-5 text-left flex items-center justify-between"
+                    data-testid={`faq-toggle-${i}`}
+                  >
+                    <EditableText
+                      id={`${faq.id}-q`}
+                      defaultText={defaultFaqs[i].q}
+                      element="span"
+                      className="font-bold text-slate-900"
+                    />
+                    <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${openFaq === i ? 'rotate-180' : ''}`} />
+                  </button>
+                  {openFaq === i && (
+                    <div className="px-6 pb-5">
+                      <EditableText
+                        id={`${faq.id}-a`}
+                        defaultText={defaultFaqs[i].a}
+                        element="p"
+                        className="text-slate-600 leading-relaxed"
+                      />
+                    </div>
+                  )}
+                </div>
+              </EditableContainer>
+            ))}
+          </div>
+        </div>
+      </section>
+    </EditableSection>
+  );
+}
+
+function StoriesSection() {
+  const { isEditMode, isSectionVisible } = useContent();
+  const visible = isSectionVisible('stories');
+
+  const stories = [
+    { id: 'story-1' },
+    { id: 'story-2' },
+    { id: 'story-3' },
+  ];
+
+  const defaultStories = [
+    { quote: 'InterBridge helped us find a reliable electronics manufacturer when our previous supplier fell through. Their bilingual negotiation saved us 15% on production costs.', author: 'Sarah K.', role: 'Tech Startup Founder' },
+    { quote: 'As a small business owner, I was intimidated by the idea of sourcing from China. InterBridge made the entire process smooth and transparent.', author: 'Michael R.', role: 'E-commerce Entrepreneur' },
+    { quote: 'The quality control inspections gave us peace of mind. We\'ve never had a shipment issue since working with InterBridge.', author: 'Jennifer L.', role: 'Product Manager' },
+  ];
+
+  return (
+    <EditableSection id="stories" name="Stories">
+      <section id="stories" className={`py-24 bg-white relative overflow-hidden ${!visible && isEditMode ? 'opacity-40' : ''}`}>
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-white"></div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-16">
+            <EditableText
+              id="stories-badge"
+              defaultText="Client Success"
+              className="text-blue-700 font-bold uppercase tracking-widest text-sm"
+              element="span"
+            />
+            <EditableText
+              id="stories-title"
+              defaultText="What Our Clients Say"
+              element="h2"
+              className="text-4xl font-extrabold text-slate-900 mt-4"
+            />
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {stories.map((story, i) => (
+              <EditableContainer key={story.id} id={story.id} label={`Story ${i + 1}`}>
+                <div className="bg-white rounded-2xl p-8 shadow-lg border border-slate-100 h-full flex flex-col">
+                  <Quote className="w-10 h-10 text-blue-200 mb-4" />
+                  <EditableText
+                    id={`${story.id}-quote`}
+                    defaultText={defaultStories[i].quote}
+                    element="p"
+                    className="text-slate-600 leading-relaxed flex-grow"
+                  />
+                  <div className="mt-6 pt-6 border-t border-slate-100">
+                    <EditableText
+                      id={`${story.id}-author`}
+                      defaultText={defaultStories[i].author}
+                      element="span"
+                      className="font-bold text-slate-900"
+                    />
+                    <EditableText
+                      id={`${story.id}-role`}
+                      defaultText={defaultStories[i].role}
+                      element="p"
+                      className="text-slate-500 text-sm"
+                    />
+                  </div>
+                </div>
+              </EditableContainer>
+            ))}
+          </div>
+        </div>
+      </section>
+    </EditableSection>
+  );
+}
+
+function ContactSection() {
+  const { isEditMode, isSectionVisible } = useContent();
+  const visible = isSectionVisible('contact');
+
+  return (
+    <EditableSection id="contact" name="Contact">
+      <section id="contact" className={`py-24 bg-slate-900 text-white ${!visible && isEditMode ? 'opacity-40' : ''}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16">
             <div>
               <EditableText
-                id="contact-title"
-                defaultText="Ready to scale your business?"
-                element="h2"
-                className="text-3xl md:text-4xl font-bold mb-6"
+                id="contact-badge"
+                defaultText="Get In Touch"
+                className="text-blue-400 font-bold uppercase tracking-widest text-sm"
+                element="span"
               />
               <EditableText
-                id="contact-subtitle"
-                defaultText="Whether you are a startup looking for your first batch or an enterprise seeking a new OEM partner, InterBridge is ready to assist."
+                id="contact-title"
+                defaultText="Ready to Start Sourcing?"
+                element="h2"
+                className="text-4xl font-extrabold mt-4 mb-6"
+              />
+              <EditableText
+                id="contact-description"
+                defaultText="Tell us about your product needs and we'll get back to you within 24 hours with a personalized plan."
                 element="p"
                 className="text-slate-300 text-lg mb-10"
               />
               
               <div className="space-y-6">
-                <div className="flex items-center space-x-4">
-                  <div className="bg-blue-800 p-3 rounded-lg">
-                    <Mail className="text-blue-300" />
+                <EditableContainer id="contact-email-block" label="Email">
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-blue-800 p-3 rounded-lg">
+                      <Mail className="text-blue-300" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-slate-400">Email Us</div>
+                      <EditableText
+                        id="contact-email"
+                        defaultText="Moda232320315@gmail.com"
+                        className="text-lg font-semibold"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-sm text-slate-400">Email Us</div>
-                    <EditableText
-                      id="contact-email"
-                      defaultText="Moda232320315@gmail.com"
-                      className="text-lg font-semibold"
-                    />
+                </EditableContainer>
+                
+                <EditableContainer id="contact-phone-block" label="Phone">
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-blue-800 p-3 rounded-lg">
+                      <Phone className="text-blue-300" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-slate-400">Call / WhatsApp</div>
+                      <EditableText
+                        id="contact-phone"
+                        defaultText="+86 15325467680"
+                        className="text-lg font-semibold"
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <div className="bg-blue-800 p-3 rounded-lg">
-                    <Phone className="text-blue-300" />
+                </EditableContainer>
+                
+                <EditableContainer id="contact-location-block" label="Location">
+                  <div className="flex items-center space-x-4">
+                    <div className="bg-blue-800 p-3 rounded-lg">
+                      <MapPin className="text-blue-300" />
+                    </div>
+                    <div>
+                      <div className="text-sm text-slate-400">Located In</div>
+                      <EditableText
+                        id="contact-location"
+                        defaultText="Guangzhou, China"
+                        className="text-lg font-semibold"
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-sm text-slate-400">Call / WhatsApp</div>
-                    <EditableText
-                      id="contact-phone"
-                      defaultText="+86 15325467680"
-                      className="text-lg font-semibold"
-                    />
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <div className="bg-blue-800 p-3 rounded-lg">
-                    <MapPin className="text-blue-300" />
-                  </div>
-                  <div>
-                    <div className="text-sm text-slate-400">Office Location</div>
-                    <EditableText
-                      id="contact-location"
-                      defaultText="Guangzhou, China"
-                      className="text-lg font-semibold"
-                    />
-                  </div>
-                </div>
+                </EditableContainer>
               </div>
             </div>
 
@@ -1306,34 +1197,29 @@ export default function Home() {
           </div>
         </div>
       </section>
+    </EditableSection>
+  );
+}
 
-      {/* Footer */}
-      <footer className="bg-slate-950 text-slate-400 py-12 border-t border-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="mb-4 md:mb-0">
-            <div className="flex items-center justify-center md:justify-start mb-2">
-              <Globe size={20} className="mr-2 text-blue-600" />
-              <EditableText
-                id="footer-brand"
-                defaultText="InterBridge Trans & Trade"
-                className="font-bold text-white"
-                element="span"
-              />
+function Footer() {
+  return (
+    <footer className="bg-slate-950 text-slate-400 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col md:flex-row justify-between items-center">
+          <div className="flex items-center mb-4 md:mb-0">
+            <div className="w-8 h-8 bg-blue-900 rounded-lg flex items-center justify-center text-white mr-2">
+              <Globe size={18} />
             </div>
-            <EditableText
-              id="footer-tagline"
-              defaultText="Your reliable partner for manufacturing & translation."
-              element="p"
-              className="text-sm"
-            />
+            <span className="font-bold text-white">InterBridge Trans & Trade</span>
           </div>
-          <div className="flex space-x-8 text-sm flex-wrap justify-center gap-4">
-            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-white transition-colors">LinkedIn</a>
-          </div>
+          <EditableText
+            id="footer-copyright"
+            defaultText="© 2024 InterBridge Trans & Trade. All rights reserved."
+            element="p"
+            className="text-sm"
+          />
         </div>
-      </footer>
-    </div>
+      </div>
+    </footer>
   );
 }
