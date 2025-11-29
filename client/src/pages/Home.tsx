@@ -1,4 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useLocation } from 'wouter';
+import { useAdmin } from '@/lib/adminContext';
+import { useContent } from '@/lib/contentContext';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Globe, 
   Factory, 
@@ -22,34 +26,72 @@ import {
   LayoutList,
   ChevronDown,
   ZoomIn,
-  Edit2,
-  Check
+  Save,
+  Settings,
+  LogOut,
+  Loader2
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-interface EditableContent {
-  [key: string]: string;
+interface EditableTextProps {
+  id: string;
+  defaultText: string;
+  className?: string;
+  element?: 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'div';
+  multiline?: boolean;
+}
+
+function EditableText({ id, defaultText, className = '', element = 'span', multiline = false }: EditableTextProps) {
+  const { isEditMode, getContent, updateContent } = useContent();
+  const text = getContent(id, defaultText);
+  
+  const Element = element;
+
+  if (!isEditMode) {
+    if (element === 'h1') {
+      return <h1 className={className} dangerouslySetInnerHTML={{ __html: text.replace(/\n/g, '<br/>') }} />;
+    }
+    if (element === 'h2') {
+      return <h2 className={className} dangerouslySetInnerHTML={{ __html: text.replace(/\n/g, '<br/>') }} />;
+    }
+    if (element === 'h3') {
+      return <h3 className={className} dangerouslySetInnerHTML={{ __html: text.replace(/\n/g, '<br/>') }} />;
+    }
+    if (element === 'h4') {
+      return <h4 className={className} dangerouslySetInnerHTML={{ __html: text.replace(/\n/g, '<br/>') }} />;
+    }
+    if (element === 'p') {
+      return <p className={className} dangerouslySetInnerHTML={{ __html: text.replace(/\n/g, '<br/>') }} />;
+    }
+    return <span className={className} dangerouslySetInnerHTML={{ __html: text.replace(/\n/g, '<br/>') }} />;
+  }
+
+  return (
+    <Element
+      contentEditable
+      suppressContentEditableWarning
+      onBlur={(e: React.FocusEvent<HTMLElement>) => {
+        const newText = e.currentTarget.innerText || '';
+        if (newText !== text) {
+          updateContent(id, newText);
+        }
+      }}
+      className={`${className} outline-none ring-2 ring-blue-400 ring-offset-2 bg-blue-50/50 rounded cursor-text`}
+      data-testid={`editable-${id}`}
+    >
+      {text}
+    </Element>
+  );
 }
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editableContent, setEditableContent] = useState<EditableContent>({});
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('interbridge_content');
-    if (saved) {
-      setEditableContent(JSON.parse(saved));
-    }
-  }, []);
-
-  // Save to localStorage whenever content changes
-  useEffect(() => {
-    if (Object.keys(editableContent).length > 0) {
-      localStorage.setItem('interbridge_content', JSON.stringify(editableContent));
-    }
-  }, [editableContent]);
+  const { isAdmin, logout } = useAdmin();
+  const { isEditMode, setEditMode, saveAllChanges, hasUnsavedChanges } = useContent();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [isSaving, setIsSaving] = useState(false);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const toggleFaq = (index: number) => setOpenFaq(openFaq === index ? null : index);
@@ -62,46 +104,107 @@ export default function Home() {
     }
   };
 
-  const getEditableText = (key: string, defaultText: string) => {
-    return editableContent[key] || defaultText;
+  const handleSave = async () => {
+    setIsSaving(true);
+    const result = await saveAllChanges();
+    toast({
+      title: result.success ? "Saved!" : "Error",
+      description: result.message,
+      variant: result.success ? "default" : "destructive"
+    });
+    setIsSaving(false);
   };
 
-  const updateEditableText = (key: string, value: string) => {
-    setEditableContent(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  };
-
-  const EditableText = ({ id, defaultText, element: Element = 'span', className = '' }: {
-    id: string;
-    defaultText: string;
-    element?: string;
-    className?: string;
-  }) => {
-    const text = getEditableText(id, defaultText);
-    const ElementComponent = Element as any;
-
-    if (!isEditMode) {
-      return <ElementComponent className={className}>{text}</ElementComponent>;
-    }
-
-    return (
-      <ElementComponent
-        contentEditable
-        suppressContentEditableWarning
-        onBlur={(e: any) => updateEditableText(id, e.currentTarget.textContent || '')}
-        className={`${className} bg-blue-50 border-2 border-blue-400 rounded px-1 outline-none focus:bg-blue-100 cursor-text`}
-      >
-        {text}
-      </ElementComponent>
-    );
+  const handleLogout = async () => {
+    await logout();
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out.",
+    });
   };
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
+      {/* Admin Floating Toolbar */}
+      {isAdmin && (
+        <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2" data-testid="admin-toolbar">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-2 flex flex-col gap-2">
+            <Button
+              size="sm"
+              variant={isEditMode ? "default" : "outline"}
+              onClick={() => setEditMode(!isEditMode)}
+              className="gap-2"
+              data-testid="button-toggle-edit"
+            >
+              {isEditMode ? (
+                <>
+                  <X className="w-4 h-4" />
+                  Exit Edit
+                </>
+              ) : (
+                <>
+                  <Settings className="w-4 h-4" />
+                  Edit Mode
+                </>
+              )}
+            </Button>
+            
+            {isEditMode && hasUnsavedChanges && (
+              <Button
+                size="sm"
+                variant="default"
+                onClick={handleSave}
+                disabled={isSaving}
+                className="gap-2 bg-green-600 hover:bg-green-700"
+                data-testid="button-save-floating"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    Save
+                  </>
+                )}
+              </Button>
+            )}
+            
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => setLocation('/admin')}
+              className="gap-2"
+              data-testid="button-admin-panel"
+            >
+              <Settings className="w-4 h-4" />
+              Panel
+            </Button>
+            
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={handleLogout}
+              className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+              data-testid="button-logout-floating"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </Button>
+          </div>
+          
+          {isEditMode && (
+            <div className="bg-blue-600 text-white text-xs px-3 py-2 rounded-lg text-center">
+              Click any highlighted text to edit
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Navigation */}
-      <nav className="fixed w-full bg-white/95 backdrop-blur-md shadow-sm z-50 transition-all duration-300">
+      <nav className="fixed w-full bg-white/95 backdrop-blur-md shadow-sm z-40 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-20 items-center">
             <div 
@@ -113,8 +216,18 @@ export default function Home() {
                 <Globe size={24} />
               </div>
               <div className="flex flex-col">
-                <span className="font-bold text-xl tracking-tight text-slate-900 leading-none">InterBridge</span>
-                <span className="text-xs font-semibold text-blue-700 tracking-wider uppercase">Trans & Trade</span>
+                <EditableText
+                  id="brand-name"
+                  defaultText="InterBridge"
+                  className="font-bold text-xl tracking-tight text-slate-900 leading-none"
+                  element="span"
+                />
+                <EditableText
+                  id="brand-tagline"
+                  defaultText="Trans & Trade"
+                  className="text-xs font-semibold text-blue-700 tracking-wider uppercase"
+                  element="span"
+                />
               </div>
             </div>
             
@@ -155,24 +268,6 @@ export default function Home() {
               >
                 Get a Quote
               </button>
-              <div className="w-px h-6 bg-slate-200 mx-2"></div>
-              <button 
-                onClick={() => setIsEditMode(!isEditMode)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${isEditMode ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'}`}
-                data-testid="button-edit-mode"
-              >
-                {isEditMode ? (
-                  <>
-                    <Check size={18} />
-                    Done Editing
-                  </>
-                ) : (
-                  <>
-                    <Edit2 size={18} />
-                    Edit Mode
-                  </>
-                )}
-              </button>
             </div>
 
             {/* Mobile Menu Button */}
@@ -195,35 +290,30 @@ export default function Home() {
               <button 
                 onClick={() => scrollToSection('services')} 
                 className="block w-full text-left px-3 py-3 text-slate-600 font-medium border-b border-slate-50"
-                data-testid="mobile-link-services"
               >
                 Main Services
               </button>
               <button 
                 onClick={() => scrollToSection('buyers')} 
                 className="block w-full text-left px-3 py-3 text-slate-600 font-medium border-b border-slate-50"
-                data-testid="mobile-link-buyers"
               >
                 Buyer Types
               </button>
               <button 
                 onClick={() => scrollToSection('process')} 
                 className="block w-full text-left px-3 py-3 text-slate-600 font-medium border-b border-slate-50"
-                data-testid="mobile-link-process"
               >
                 Our Process
               </button>
               <button 
                 onClick={() => scrollToSection('faq')} 
                 className="block w-full text-left px-3 py-3 text-slate-600 font-medium border-b border-slate-50"
-                data-testid="mobile-link-faq"
               >
                 FAQ & Pricing
               </button>
               <button 
                 onClick={() => scrollToSection('contact')} 
                 className="block w-full text-left px-3 py-3 text-blue-700 font-bold"
-                data-testid="mobile-link-contact"
               >
                 Contact Us
               </button>
@@ -245,15 +335,20 @@ export default function Home() {
             <div className="space-y-8">
               <div className="inline-flex items-center bg-blue-800/50 rounded-full px-4 py-1.5 border border-blue-700">
                 <span className="w-2 h-2 rounded-full bg-green-400 mr-2 animate-pulse"></span>
-                <span className="text-sm font-medium tracking-wide text-blue-100">Bridging the Gap to Global Markets</span>
+                <EditableText
+                  id="hero-badge"
+                  defaultText="Bridging the Gap to Global Markets"
+                  className="text-sm font-medium tracking-wide text-blue-100"
+                  element="span"
+                />
               </div>
-              <EditableText 
+              <EditableText
                 id="hero-headline"
                 defaultText="Direct Factory Access. Zero Middlemen."
                 element="h1"
                 className="text-5xl lg:text-6xl font-extrabold leading-tight"
               />
-              <EditableText 
+              <EditableText
                 id="hero-description"
                 defaultText="Your bilingual partner for sourcing, negotiation, and logistics. From small-batch orders to OEM projects, InterBridge connects you directly to the production line."
                 element="p"
@@ -265,14 +360,15 @@ export default function Home() {
                   className="bg-white text-blue-900 px-8 py-4 rounded-lg font-bold hover:bg-blue-50 transition-colors flex items-center justify-center"
                   data-testid="button-start-sourcing"
                 >
-                  Start Sourcing <ArrowRight className="ml-2" size={20} />
+                  <EditableText id="hero-cta-primary" defaultText="Start Sourcing" />
+                  <ArrowRight className="ml-2" size={20} />
                 </button>
                 <button 
                   onClick={() => scrollToSection('services')} 
                   className="border border-blue-400/30 bg-blue-900/20 backdrop-blur-sm text-white px-8 py-4 rounded-lg font-semibold hover:bg-blue-900/40 transition-colors"
                   data-testid="button-view-services"
                 >
-                  View Services
+                  <EditableText id="hero-cta-secondary" defaultText="View Services" />
                 </button>
               </div>
             </div>
@@ -287,8 +383,18 @@ export default function Home() {
                       <Factory size={32} />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-white">Factory Screening</h3>
-                      <p className="text-slate-300 text-sm mt-1">Background checks, capacity verification, and direct price comparison.</p>
+                      <EditableText
+                        id="hero-card-1-title"
+                        defaultText="Factory Screening"
+                        element="h3"
+                        className="text-xl font-bold text-white"
+                      />
+                      <EditableText
+                        id="hero-card-1-desc"
+                        defaultText="Background checks, capacity verification, and direct price comparison."
+                        element="p"
+                        className="text-slate-300 text-sm mt-1"
+                      />
                     </div>
                   </div>
                   <div className="w-full h-px bg-slate-700"></div>
@@ -297,8 +403,18 @@ export default function Home() {
                       <Languages size={32} />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-white">Bilingual Negotiation</h3>
-                      <p className="text-slate-300 text-sm mt-1">Contract review and communication support in English & Chinese.</p>
+                      <EditableText
+                        id="hero-card-2-title"
+                        defaultText="Bilingual Negotiation"
+                        element="h3"
+                        className="text-xl font-bold text-white"
+                      />
+                      <EditableText
+                        id="hero-card-2-desc"
+                        defaultText="Contract review and communication support in English & Chinese."
+                        element="p"
+                        className="text-slate-300 text-sm mt-1"
+                      />
                     </div>
                   </div>
                   <div className="w-full h-px bg-slate-700"></div>
@@ -307,8 +423,18 @@ export default function Home() {
                       <ShieldCheck size={32} />
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-white">Risk Reduction</h3>
-                      <p className="text-slate-300 text-sm mt-1">IQC/FQC inspections and secure payment method advice.</p>
+                      <EditableText
+                        id="hero-card-3-title"
+                        defaultText="Risk Reduction"
+                        element="h3"
+                        className="text-xl font-bold text-white"
+                      />
+                      <EditableText
+                        id="hero-card-3-desc"
+                        defaultText="IQC/FQC inspections and secure payment method advice."
+                        element="p"
+                        className="text-slate-300 text-sm mt-1"
+                      />
                     </div>
                   </div>
                 </div>
@@ -322,14 +448,19 @@ export default function Home() {
       <section id="services" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <span className="text-blue-600 font-semibold tracking-wider uppercase text-sm">What I Can Do</span>
-            <EditableText 
+            <EditableText
+              id="services-label"
+              defaultText="What I Can Do"
+              className="text-blue-600 font-semibold tracking-wider uppercase text-sm"
+              element="span"
+            />
+            <EditableText
               id="services-title"
               defaultText="Comprehensive Trade Services"
               element="h2"
               className="text-3xl md:text-4xl font-bold text-slate-900 mt-2 mb-4"
             />
-            <EditableText 
+            <EditableText
               id="services-subtitle"
               defaultText="A full suite of services designed to make your import business safe, transparent, and scalable."
               element="p"
@@ -339,88 +470,141 @@ export default function Home() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Service 1 */}
-            <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 hover:border-blue-200 transition-all hover:shadow-lg group" data-testid="card-service-screening">
+            <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 hover:border-blue-200 transition-all hover:shadow-lg group">
               <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center text-blue-700 mb-6 group-hover:bg-blue-700 group-hover:text-white transition-colors">
                 <Search size={24} />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Factory & Supplier Screening</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Background checks, capacity/equipment verification, and price comparisons to ensure you deal with legitimate manufacturers.
-              </p>
+              <EditableText
+                id="service-1-title"
+                defaultText="Factory & Supplier Screening"
+                element="h3"
+                className="text-xl font-bold text-slate-900 mb-3"
+              />
+              <EditableText
+                id="service-1-desc"
+                defaultText="Background checks, capacity/equipment verification, and price comparisons to ensure you deal with legitimate manufacturers."
+                element="p"
+                className="text-slate-600 text-sm leading-relaxed"
+              />
             </div>
 
             {/* Service 2 */}
-            <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 hover:border-blue-200 transition-all hover:shadow-lg group" data-testid="card-service-sample">
+            <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 hover:border-blue-200 transition-all hover:shadow-lg group">
               <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center text-blue-700 mb-6 group-hover:bg-blue-700 group-hover:text-white transition-colors">
                 <LayoutList size={24} />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Sample Management</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Sample placement, optimization feedback, and confirmation of the sampling process to ensure the product meets your vision.
-              </p>
+              <EditableText
+                id="service-2-title"
+                defaultText="Sample Management"
+                element="h3"
+                className="text-xl font-bold text-slate-900 mb-3"
+              />
+              <EditableText
+                id="service-2-desc"
+                defaultText="Sample placement, optimization feedback, and confirmation of the sampling process to ensure the product meets your vision."
+                element="p"
+                className="text-slate-600 text-sm leading-relaxed"
+              />
             </div>
 
             {/* Service 3 */}
-            <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 hover:border-blue-200 transition-all hover:shadow-lg group" data-testid="card-service-qc">
+            <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 hover:border-blue-200 transition-all hover:shadow-lg group">
               <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center text-blue-700 mb-6 group-hover:bg-blue-700 group-hover:text-white transition-colors">
                 <ShieldCheck size={24} />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Quality Control</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Incoming inspection (IQC), Final QC (FQC), Container Loading Checks, and coordination of third-party testing.
-              </p>
+              <EditableText
+                id="service-3-title"
+                defaultText="Quality Control"
+                element="h3"
+                className="text-xl font-bold text-slate-900 mb-3"
+              />
+              <EditableText
+                id="service-3-desc"
+                defaultText="Incoming inspection (IQC), Final QC (FQC), Container Loading Checks, and coordination of third-party testing."
+                element="p"
+                className="text-slate-600 text-sm leading-relaxed"
+              />
             </div>
 
              {/* Service 4 */}
-             <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 hover:border-blue-200 transition-all hover:shadow-lg group" data-testid="card-service-tracking">
+             <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 hover:border-blue-200 transition-all hover:shadow-lg group">
               <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center text-blue-700 mb-6 group-hover:bg-blue-700 group-hover:text-white transition-colors">
                 <TrendingUp size={24} />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Production Tracking</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Order placement, regular production progress reports, and photo/video acceptance at key stages.
-              </p>
+              <EditableText
+                id="service-4-title"
+                defaultText="Production Tracking"
+                element="h3"
+                className="text-xl font-bold text-slate-900 mb-3"
+              />
+              <EditableText
+                id="service-4-desc"
+                defaultText="Order placement, regular production progress reports, and photo/video acceptance at key stages."
+                element="p"
+                className="text-slate-600 text-sm leading-relaxed"
+              />
             </div>
 
             {/* Service 5 */}
-            <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 hover:border-blue-200 transition-all hover:shadow-lg group" data-testid="card-service-logistics">
+            <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 hover:border-blue-200 transition-all hover:shadow-lg group">
               <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center text-blue-700 mb-6 group-hover:bg-blue-700 group-hover:text-white transition-colors">
                 <Ship size={24} />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Logistics & Customs</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Comparison of FOB/CIF/DDP options and assistance with LCL/FCL customs clearance advice.
-              </p>
+              <EditableText
+                id="service-5-title"
+                defaultText="Logistics & Customs"
+                element="h3"
+                className="text-xl font-bold text-slate-900 mb-3"
+              />
+              <EditableText
+                id="service-5-desc"
+                defaultText="Comparison of FOB/CIF/DDP options and assistance with LCL/FCL customs clearance advice."
+                element="p"
+                className="text-slate-600 text-sm leading-relaxed"
+              />
             </div>
 
             {/* Service 6 */}
-            <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 hover:border-blue-200 transition-all hover:shadow-lg group" data-testid="card-service-contracts">
+            <div className="bg-slate-50 p-8 rounded-xl border border-slate-100 hover:border-blue-200 transition-all hover:shadow-lg group">
               <div className="bg-blue-100 w-12 h-12 rounded-lg flex items-center justify-center text-blue-700 mb-6 group-hover:bg-blue-700 group-hover:text-white transition-colors">
                 <FileText size={24} />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-3">Negotiation & Contracts</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Advising on phased payments, third-party escrow/letters of credit, and contract review to reduce risk.
-              </p>
+              <EditableText
+                id="service-6-title"
+                defaultText="Negotiation & Contracts"
+                element="h3"
+                className="text-xl font-bold text-slate-900 mb-3"
+              />
+              <EditableText
+                id="service-6-desc"
+                defaultText="Advising on phased payments, third-party escrow/letters of credit, and contract review to reduce risk."
+                element="p"
+                className="text-slate-600 text-sm leading-relaxed"
+              />
             </div>
 
-            {/* Service 7 (Full width or distinct) */}
-            <div className="md:col-span-2 lg:col-span-3 bg-blue-900 rounded-xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 text-white shadow-xl" data-testid="card-service-oem">
+            {/* Service 7 (Full width) */}
+            <div className="md:col-span-2 lg:col-span-3 bg-blue-900 rounded-xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 text-white shadow-xl">
               <div className="mb-6 md:mb-0 md:mr-8">
                 <h3 className="text-2xl font-bold mb-2 flex items-center">
                   <Package className="mr-3 text-amber-400" /> 
-                  Small-Batch / OEM / ODM Support
+                  <EditableText
+                    id="service-7-title"
+                    defaultText="Small-Batch / OEM / ODM Support"
+                  />
                 </h3>
-                <p className="text-blue-100">
-                  We accept orders for small-volume purchases and support custom branding projects, helping you validate the market before scaling up.
-                </p>
+                <EditableText
+                  id="service-7-desc"
+                  defaultText="We accept orders for small-volume purchases and support custom branding projects, helping you validate the market before scaling up."
+                  element="p"
+                  className="text-blue-100"
+                />
               </div>
               <button 
                 onClick={() => scrollToSection('contact')} 
                 className="bg-white text-blue-900 px-8 py-3 rounded-lg font-bold hover:bg-blue-50 transition-colors whitespace-nowrap"
-                data-testid="button-start-project"
               >
-                Start Your Project
+                <EditableText id="service-7-cta" defaultText="Start Your Project" />
               </button>
             </div>
           </div>
@@ -432,8 +616,18 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
-              <span className="text-blue-600 font-semibold tracking-wider uppercase text-sm">Why Choose InterBridge?</span>
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mt-2 mb-6" data-testid="text-why-choose-title">Built on Trust & Transparency</h2>
+              <EditableText
+                id="why-label"
+                defaultText="Why Choose InterBridge?"
+                className="text-blue-600 font-semibold tracking-wider uppercase text-sm"
+                element="span"
+              />
+              <EditableText
+                id="why-title"
+                defaultText="Built on Trust & Transparency"
+                element="h2"
+                className="text-3xl md:text-4xl font-bold text-slate-900 mt-2 mb-6"
+              />
               
               <div className="space-y-8">
                 <div className="flex">
@@ -443,8 +637,18 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="ml-4">
-                    <h3 className="text-lg font-medium text-slate-900">Bilingual Communication</h3>
-                    <p className="mt-2 text-slate-600">Seamless communication in English and Chinese to prevent misunderstandings.</p>
+                    <EditableText
+                      id="why-1-title"
+                      defaultText="Bilingual Communication"
+                      element="h3"
+                      className="text-lg font-medium text-slate-900"
+                    />
+                    <EditableText
+                      id="why-1-desc"
+                      defaultText="Seamless communication in English and Chinese to prevent misunderstandings."
+                      element="p"
+                      className="mt-2 text-slate-600"
+                    />
                   </div>
                 </div>
 
@@ -455,8 +659,18 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="ml-4">
-                    <h3 className="text-lg font-medium text-slate-900">Major Area Coverage</h3>
-                    <p className="mt-2 text-slate-600">Familiar with SMEs and supply chain logic across China's major manufacturing hubs.</p>
+                    <EditableText
+                      id="why-2-title"
+                      defaultText="Major Area Coverage"
+                      element="h3"
+                      className="text-lg font-medium text-slate-900"
+                    />
+                    <EditableText
+                      id="why-2-desc"
+                      defaultText="Familiar with SMEs and supply chain logic across China's major manufacturing hubs."
+                      element="p"
+                      className="mt-2 text-slate-600"
+                    />
                   </div>
                 </div>
 
@@ -467,35 +681,80 @@ export default function Home() {
                     </div>
                   </div>
                   <div className="ml-4">
-                    <h3 className="text-lg font-medium text-slate-900">Traceability & Transparency</h3>
-                    <p className="mt-2 text-slate-600">Production evidence (photos/videos/test reports) delivered in stages so you always know the status.</p>
+                    <EditableText
+                      id="why-3-title"
+                      defaultText="Traceability & Transparency"
+                      element="h3"
+                      className="text-lg font-medium text-slate-900"
+                    />
+                    <EditableText
+                      id="why-3-desc"
+                      defaultText="Production evidence (photos/videos/test reports) delivered in stages so you always know the status."
+                      element="p"
+                      className="mt-2 text-slate-600"
+                    />
                   </div>
                 </div>
               </div>
             </div>
             
             <div className="bg-white p-8 rounded-2xl shadow-xl border border-slate-100">
-               <h3 className="text-2xl font-bold text-slate-900 mb-6 text-center" data-testid="text-perfect-for-title">We Are Perfect For</h3>
+               <EditableText
+                 id="perfect-for-title"
+                 defaultText="We Are Perfect For"
+                 element="h3"
+                 className="text-2xl font-bold text-slate-900 mb-6 text-center"
+               />
                <div className="space-y-4">
-                 <div className="flex items-center p-4 bg-slate-50 rounded-lg border border-slate-100" data-testid="card-buyer-ecommerce">
+                 <div className="flex items-center p-4 bg-slate-50 rounded-lg border border-slate-100">
                     <div className="bg-green-100 p-2 rounded-full mr-4 text-green-700"><Users size={20}/></div>
                     <div>
-                      <h4 className="font-bold text-slate-800">E-Commerce Sellers</h4>
-                      <p className="text-xs text-slate-500">New to overseas sourcing or wanting small-batch, diverse product validation.</p>
+                      <EditableText
+                        id="buyer-1-title"
+                        defaultText="E-Commerce Sellers"
+                        element="h4"
+                        className="font-bold text-slate-800"
+                      />
+                      <EditableText
+                        id="buyer-1-desc"
+                        defaultText="New to overseas sourcing or wanting small-batch, diverse product validation."
+                        element="p"
+                        className="text-xs text-slate-500"
+                      />
                     </div>
                  </div>
-                 <div className="flex items-center p-4 bg-slate-50 rounded-lg border border-slate-100" data-testid="card-buyer-brand">
+                 <div className="flex items-center p-4 bg-slate-50 rounded-lg border border-slate-100">
                     <div className="bg-purple-100 p-2 rounded-full mr-4 text-purple-700"><Star size={20}/></div>
                     <div>
-                      <h4 className="font-bold text-slate-800">Brand Owners</h4>
-                      <p className="text-xs text-slate-500">With existing designs/brands but needing to find suitable manufacturers.</p>
+                      <EditableText
+                        id="buyer-2-title"
+                        defaultText="Brand Owners"
+                        element="h4"
+                        className="font-bold text-slate-800"
+                      />
+                      <EditableText
+                        id="buyer-2-desc"
+                        defaultText="With existing designs/brands but needing to find suitable manufacturers."
+                        element="p"
+                        className="text-xs text-slate-500"
+                      />
                     </div>
                  </div>
-                 <div className="flex items-center p-4 bg-slate-50 rounded-lg border border-slate-100" data-testid="card-buyer-importer">
+                 <div className="flex items-center p-4 bg-slate-50 rounded-lg border border-slate-100">
                     <div className="bg-amber-100 p-2 rounded-full mr-4 text-amber-700"><TrendingUp size={20}/></div>
                     <div>
-                      <h4 className="font-bold text-slate-800">Smart Importers</h4>
-                      <p className="text-xs text-slate-500">Looking to replace unreliable suppliers, optimize costs, or improve quality.</p>
+                      <EditableText
+                        id="buyer-3-title"
+                        defaultText="Smart Importers"
+                        element="h4"
+                        className="font-bold text-slate-800"
+                      />
+                      <EditableText
+                        id="buyer-3-desc"
+                        defaultText="Looking to replace unreliable suppliers, optimize costs, or improve quality."
+                        element="p"
+                        className="text-xs text-slate-500"
+                      />
                     </div>
                  </div>
                </div>
@@ -508,46 +767,45 @@ export default function Home() {
       <section id="process" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900" data-testid="text-process-title">Typical 5-Step Process</h2>
-            <p className="text-slate-600 mt-4">A clear path from requirement to delivery.</p>
+            <EditableText
+              id="process-title"
+              defaultText="Typical 5-Step Process"
+              element="h2"
+              className="text-3xl md:text-4xl font-bold text-slate-900"
+            />
+            <EditableText
+              id="process-subtitle"
+              defaultText="A clear path from requirement to delivery."
+              element="p"
+              className="text-slate-600 mt-4"
+            />
           </div>
           
           <div className="grid md:grid-cols-5 gap-6">
             {[
-              { 
-                step: "01", 
-                title: "Requirements", 
-                desc: "You provide product details, target price, MOQ, delivery date, and quality specs." 
-              },
-              { 
-                step: "02", 
-                title: "Screening", 
-                desc: "I screen factories at the production site and provide 2–4 Supplier Options & Comparison Report." 
-              },
-              { 
-                step: "03", 
-                title: "Sampling", 
-                desc: "After supplier confirmation, arrange sampling and provide feedback until approval." 
-              },
-              { 
-                step: "04", 
-                title: "Production", 
-                desc: "Follow up on mass production and arrange phased testing/photo/video reports." 
-              },
-              { 
-                step: "05", 
-                title: "Delivery", 
-                desc: "Inspection, shipment arrangement, customs clearance, and complete documentation." 
-              },
+              { step: "01", titleId: "step-1-title", defaultTitle: "Requirements", descId: "step-1-desc", defaultDesc: "You provide product details, target price, MOQ, delivery date, and quality specs." },
+              { step: "02", titleId: "step-2-title", defaultTitle: "Screening", descId: "step-2-desc", defaultDesc: "I screen factories at the production site and provide 2–4 Supplier Options & Comparison Report." },
+              { step: "03", titleId: "step-3-title", defaultTitle: "Sampling", descId: "step-3-desc", defaultDesc: "After supplier confirmation, arrange sampling and provide feedback until approval." },
+              { step: "04", titleId: "step-4-title", defaultTitle: "Production", descId: "step-4-desc", defaultDesc: "Follow up on mass production and arrange phased testing/photo/video reports." },
+              { step: "05", titleId: "step-5-title", defaultTitle: "Delivery", descId: "step-5-desc", defaultDesc: "Inspection, shipment arrangement, customs clearance, and complete documentation." },
             ].map((item, index) => (
               <div 
                 key={index} 
                 className="bg-slate-50 p-6 rounded-xl border border-slate-200 hover:border-blue-400 transition-colors relative group"
-                data-testid={`card-step-${index + 1}`}
               >
                 <div className="text-4xl font-extrabold text-blue-100 mb-4 group-hover:text-blue-200 transition-colors">{item.step}</div>
-                <h3 className="text-lg font-bold text-slate-900 mb-3">{item.title}</h3>
-                <p className="text-slate-600 text-xs leading-relaxed">{item.desc}</p>
+                <EditableText
+                  id={item.titleId}
+                  defaultText={item.defaultTitle}
+                  element="h3"
+                  className="text-lg font-bold text-slate-900 mb-3"
+                />
+                <EditableText
+                  id={item.descId}
+                  defaultText={item.defaultDesc}
+                  element="p"
+                  className="text-slate-600 text-xs leading-relaxed"
+                />
               </div>
             ))}
           </div>
@@ -558,12 +816,22 @@ export default function Home() {
       <section id="faq" className="py-24 bg-slate-50">
          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-slate-900" data-testid="text-faq-title">Pricing & FAQs</h2>
-              <p className="text-slate-600 mt-4">Transparent fees and answers to common questions.</p>
+              <EditableText
+                id="faq-title"
+                defaultText="Pricing & FAQs"
+                element="h2"
+                className="text-3xl md:text-4xl font-bold text-slate-900"
+              />
+              <EditableText
+                id="faq-subtitle"
+                defaultText="Transparent fees and answers to common questions."
+                element="p"
+                className="text-slate-600 mt-4"
+              />
             </div>
 
             {/* Pricing Card */}
-            <div className="bg-blue-900 text-white rounded-2xl p-8 mb-12 shadow-xl" data-testid="card-pricing">
+            <div className="bg-blue-900 text-white rounded-2xl p-8 mb-12 shadow-xl">
                <div className="flex items-start flex-wrap gap-6">
                   <div className="bg-blue-800 p-3 rounded-lg">
                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-400">
@@ -572,12 +840,23 @@ export default function Home() {
                     </svg>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-xl font-bold mb-2">Flexible Payment Methods</h3>
-                    <p className="text-blue-100 mb-4 text-sm leading-relaxed">
-                      We support a fixed service fee per project, a commission based on transaction amount, or a mixed fee structure. Sample production costs are charged separately.
-                    </p>
+                    <EditableText
+                      id="pricing-title"
+                      defaultText="Flexible Payment Methods"
+                      element="h3"
+                      className="text-xl font-bold mb-2"
+                    />
+                    <EditableText
+                      id="pricing-desc"
+                      defaultText="We support a fixed service fee per project, a commission based on transaction amount, or a mixed fee structure. Sample production costs are charged separately."
+                      element="p"
+                      className="text-blue-100 mb-4 text-sm leading-relaxed"
+                    />
                     <div className="inline-block bg-blue-800 px-4 py-2 rounded-lg text-xs font-semibold text-amber-300 border border-blue-700">
-                      Specific pricing is based on complexity & workload and transparently written into the contract.
+                      <EditableText
+                        id="pricing-note"
+                        defaultText="Specific pricing is based on complexity & workload and transparently written into the contract."
+                      />
                     </div>
                   </div>
                </div>
@@ -586,31 +865,24 @@ export default function Home() {
             {/* FAQ Accordion */}
             <div className="space-y-4">
                {[
-                 {
-                   q: "What is the Minimum Order Quantity (MOQ)?",
-                   a: "It depends on the product. However, many products support small batches (e.g., tens to hundreds of pieces). We specialize in helping clients with small-volume needs."
-                 },
-                 {
-                   q: "Is payment secure?",
-                   a: "Yes. We recommend phased payments and prioritize using third-party escrow or letters of credit to reduce risk for all parties."
-                 },
-                 {
-                   q: "How long does it take to produce samples?",
-                   a: "Generally 7–21 days, depending on product complexity and the factory's current schedule."
-                 }
+                 { qId: "faq-1-q", defaultQ: "What is the Minimum Order Quantity (MOQ)?", aId: "faq-1-a", defaultA: "It depends on the product. However, many products support small batches (e.g., tens to hundreds of pieces). We specialize in helping clients with small-volume needs." },
+                 { qId: "faq-2-q", defaultQ: "Is payment secure?", aId: "faq-2-a", defaultA: "Yes. We recommend phased payments and prioritize using third-party escrow or letters of credit to reduce risk for all parties." },
+                 { qId: "faq-3-q", defaultQ: "How long does it take to produce samples?", aId: "faq-3-a", defaultA: "Generally 7–21 days, depending on product complexity and the factory's current schedule." }
                ].map((item, index) => (
-                 <div key={index} className="bg-white rounded-lg border border-slate-200 overflow-hidden" data-testid={`faq-item-${index}`}>
+                 <div key={index} className="bg-white rounded-lg border border-slate-200 overflow-hidden">
                     <button 
                       onClick={() => toggleFaq(index)}
                       className="w-full flex justify-between items-center p-5 text-left font-bold text-slate-800 hover:bg-slate-50 transition-colors"
-                      data-testid={`button-faq-${index}`}
                     >
-                      <span className="flex items-center"><HelpCircle size={18} className="mr-3 text-blue-600"/> {item.q}</span>
+                      <span className="flex items-center">
+                        <HelpCircle size={18} className="mr-3 text-blue-600"/>
+                        <EditableText id={item.qId} defaultText={item.defaultQ} />
+                      </span>
                       <ChevronDown size={20} className={`transform transition-transform ${openFaq === index ? 'rotate-180' : ''}`} />
                     </button>
                     {openFaq === index && (
                       <div className="p-5 pt-0 text-slate-600 text-sm bg-slate-50 border-t border-slate-100">
-                        {item.a}
+                        <EditableText id={item.aId} defaultText={item.defaultA} element="p" />
                       </div>
                     )}
                  </div>
@@ -621,7 +893,6 @@ export default function Home() {
 
       {/* Success Stories Section */}
       <section id="stories" className="py-24 bg-white relative overflow-hidden">
-        {/* Background Pattern */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden opacity-5 pointer-events-none">
            <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-blue-900 mix-blend-multiply filter blur-3xl"></div>
            <div className="absolute top-1/2 right-0 w-64 h-64 rounded-full bg-blue-600 mix-blend-multiply filter blur-3xl"></div>
@@ -629,13 +900,23 @@ export default function Home() {
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16">
-            <span className="text-blue-600 font-semibold tracking-wider uppercase text-sm">Proven Results</span>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mt-2 mb-4" data-testid="text-stories-title">Success Stories</h2>
+            <EditableText
+              id="stories-label"
+              defaultText="Proven Results"
+              className="text-blue-600 font-semibold tracking-wider uppercase text-sm"
+              element="span"
+            />
+            <EditableText
+              id="stories-title"
+              defaultText="Success Stories"
+              element="h2"
+              className="text-3xl md:text-4xl font-bold text-slate-900 mt-2 mb-4"
+            />
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {/* Card 1 */}
-            <div className="bg-slate-50 p-8 rounded-2xl border border-slate-100 shadow-lg hover:shadow-xl transition-all relative group" data-testid="card-testimonial-1">
+            {/* Testimonial 1 */}
+            <div className="bg-slate-50 p-8 rounded-2xl border border-slate-100 shadow-lg hover:shadow-xl transition-all relative group">
               <div className="absolute top-6 right-8 text-blue-100 group-hover:text-blue-200 transition-colors">
                 <Quote size={64} />
               </div>
@@ -647,20 +928,33 @@ export default function Home() {
                   <Star size={18} fill="currentColor" />
                   <Star size={18} fill="currentColor" />
                 </div>
-                <p className="text-slate-700 italic mb-6 leading-relaxed">
-                  "InterBridge didn't just find a factory; they found one willing to do a <strong>low MOQ of 500 units</strong> for our launch. We couldn't have started without them."
-                </p>
+                <EditableText
+                  id="testimonial-1-quote"
+                  defaultText="InterBridge didn't just find a factory; they found one willing to do a low MOQ of 500 units for our launch. We couldn't have started without them."
+                  element="p"
+                  className="text-slate-700 italic mb-6 leading-relaxed"
+                />
                 <div className="flex items-center justify-between mt-8 border-t border-slate-200 pt-6">
                    <div>
-                      <h4 className="font-bold text-slate-900">Sarah Jenkins</h4>
-                      <p className="text-sm text-slate-500">Founder, EcoHome Co.</p>
+                      <EditableText
+                        id="testimonial-1-name"
+                        defaultText="Sarah Jenkins"
+                        element="h4"
+                        className="font-bold text-slate-900"
+                      />
+                      <EditableText
+                        id="testimonial-1-role"
+                        defaultText="Founder, EcoHome Co."
+                        element="p"
+                        className="text-sm text-slate-500"
+                      />
                    </div>
                 </div>
               </div>
             </div>
 
-            {/* Card 2 */}
-            <div className="bg-blue-900 p-8 rounded-2xl border border-blue-800 shadow-lg hover:shadow-xl transition-all relative group text-white" data-testid="card-testimonial-2">
+            {/* Testimonial 2 */}
+            <div className="bg-blue-900 p-8 rounded-2xl border border-blue-800 shadow-lg hover:shadow-xl transition-all relative group text-white">
               <div className="absolute top-6 right-8 text-blue-800 group-hover:text-blue-700 transition-colors">
                 <Quote size={64} />
               </div>
@@ -672,20 +966,33 @@ export default function Home() {
                   <Star size={18} fill="currentColor" />
                   <Star size={18} fill="currentColor" />
                 </div>
-                <p className="text-blue-50 italic mb-6 leading-relaxed">
-                  "The <strong>Production Tracking</strong> reports were a game changer. I saw photos and videos at every stage, so I knew exactly what I was getting before shipment."
-                </p>
+                <EditableText
+                  id="testimonial-2-quote"
+                  defaultText="The Production Tracking reports were a game changer. I saw photos and videos at every stage, so I knew exactly what I was getting before shipment."
+                  element="p"
+                  className="text-blue-50 italic mb-6 leading-relaxed"
+                />
                 <div className="flex items-center justify-between mt-8 border-t border-blue-800 pt-6">
                    <div>
-                      <h4 className="font-bold">David Chen</h4>
-                      <p className="text-sm text-blue-300">Procurement Lead</p>
+                      <EditableText
+                        id="testimonial-2-name"
+                        defaultText="David Chen"
+                        element="h4"
+                        className="font-bold"
+                      />
+                      <EditableText
+                        id="testimonial-2-role"
+                        defaultText="Procurement Lead"
+                        element="p"
+                        className="text-sm text-blue-300"
+                      />
                    </div>
                 </div>
               </div>
             </div>
 
-            {/* Card 3 */}
-            <div className="bg-slate-50 p-8 rounded-2xl border border-slate-100 shadow-lg hover:shadow-xl transition-all relative group" data-testid="card-testimonial-3">
+            {/* Testimonial 3 */}
+            <div className="bg-slate-50 p-8 rounded-2xl border border-slate-100 shadow-lg hover:shadow-xl transition-all relative group">
               <div className="absolute top-6 right-8 text-blue-100 group-hover:text-blue-200 transition-colors">
                 <Quote size={64} />
               </div>
@@ -697,13 +1004,26 @@ export default function Home() {
                   <Star size={18} fill="currentColor" />
                   <Star size={18} fill="currentColor" />
                 </div>
-                <p className="text-slate-700 italic mb-6 leading-relaxed">
-                  "I needed to replace an unreliable supplier. InterBridge's screening process gave me 3 solid options in a week. The <strong>Logistics advice</strong> on DDP saved me a ton of headache."
-                </p>
+                <EditableText
+                  id="testimonial-3-quote"
+                  defaultText="I needed to replace an unreliable supplier. InterBridge's screening process gave me 3 solid options in a week. The Logistics advice on DDP saved me a ton of headache."
+                  element="p"
+                  className="text-slate-700 italic mb-6 leading-relaxed"
+                />
                 <div className="flex items-center justify-between mt-8 border-t border-slate-200 pt-6">
                    <div>
-                      <h4 className="font-bold text-slate-900">Marcus Thorne</h4>
-                      <p className="text-sm text-slate-500">CEO, TechGear</p>
+                      <EditableText
+                        id="testimonial-3-name"
+                        defaultText="Marcus Thorne"
+                        element="h4"
+                        className="font-bold text-slate-900"
+                      />
+                      <EditableText
+                        id="testimonial-3-role"
+                        defaultText="CEO, TechGear"
+                        element="p"
+                        className="text-sm text-slate-500"
+                      />
                    </div>
                 </div>
               </div>
@@ -717,44 +1037,69 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-6" data-testid="text-contact-title">Ready to scale your business?</h2>
-              <p className="text-slate-300 text-lg mb-10">
-                Whether you are a startup looking for your first batch or an enterprise seeking a new OEM partner, InterBridge is ready to assist.
-              </p>
+              <EditableText
+                id="contact-title"
+                defaultText="Ready to scale your business?"
+                element="h2"
+                className="text-3xl md:text-4xl font-bold mb-6"
+              />
+              <EditableText
+                id="contact-subtitle"
+                defaultText="Whether you are a startup looking for your first batch or an enterprise seeking a new OEM partner, InterBridge is ready to assist."
+                element="p"
+                className="text-slate-300 text-lg mb-10"
+              />
               
               <div className="space-y-6">
-                <div className="flex items-center space-x-4" data-testid="contact-email">
+                <div className="flex items-center space-x-4">
                   <div className="bg-blue-800 p-3 rounded-lg">
                     <Mail className="text-blue-300" />
                   </div>
                   <div>
                     <div className="text-sm text-slate-400">Email Us</div>
-                    <div className="text-lg font-semibold">inquiry@interbridge.com</div>
+                    <EditableText
+                      id="contact-email"
+                      defaultText="inquiry@interbridge.com"
+                      className="text-lg font-semibold"
+                    />
                   </div>
                 </div>
-                <div className="flex items-center space-x-4" data-testid="contact-phone">
+                <div className="flex items-center space-x-4">
                   <div className="bg-blue-800 p-3 rounded-lg">
                     <Phone className="text-blue-300" />
                   </div>
                   <div>
                     <div className="text-sm text-slate-400">Call / WhatsApp</div>
-                    <div className="text-lg font-semibold">+86 123 4567 8900</div>
+                    <EditableText
+                      id="contact-phone"
+                      defaultText="+86 123 4567 8900"
+                      className="text-lg font-semibold"
+                    />
                   </div>
                 </div>
-                <div className="flex items-center space-x-4" data-testid="contact-location">
+                <div className="flex items-center space-x-4">
                   <div className="bg-blue-800 p-3 rounded-lg">
                     <MapPin className="text-blue-300" />
                   </div>
                   <div>
                     <div className="text-sm text-slate-400">Office Location</div>
-                    <div className="text-lg font-semibold">Guangzhou, China</div>
+                    <EditableText
+                      id="contact-location"
+                      defaultText="Guangzhou, China"
+                      className="text-lg font-semibold"
+                    />
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="bg-white rounded-2xl p-8 text-slate-800">
-              <h3 className="text-2xl font-bold mb-6">Send us a Request</h3>
+              <EditableText
+                id="contact-form-title"
+                defaultText="Send us a Request"
+                element="h3"
+                className="text-2xl font-bold mb-6"
+              />
               <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -763,7 +1108,6 @@ export default function Home() {
                       type="text" 
                       className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" 
                       placeholder="John"
-                      data-testid="input-first-name"
                     />
                   </div>
                   <div>
@@ -772,7 +1116,6 @@ export default function Home() {
                       type="text" 
                       className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" 
                       placeholder="Doe"
-                      data-testid="input-last-name"
                     />
                   </div>
                 </div>
@@ -782,15 +1125,11 @@ export default function Home() {
                     type="email" 
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" 
                     placeholder="john@company.com"
-                    data-testid="input-email"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Interested In</label>
-                  <select 
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
-                    data-testid="select-interest"
-                  >
+                  <select className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
                     <option value="sourcing">Sourcing & Screening</option>
                     <option value="oem">OEM/ODM Project</option>
                     <option value="interpretation">Interpretation/Visit</option>
@@ -804,15 +1143,13 @@ export default function Home() {
                     rows={4} 
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" 
                     placeholder="Tell us about your product, MOQ, or specific needs..."
-                    data-testid="textarea-message"
                   ></textarea>
                 </div>
                 <button 
                   type="submit"
                   className="w-full bg-blue-900 text-white py-3 rounded-lg font-bold hover:bg-blue-800 transition-colors shadow-lg hover:shadow-xl"
-                  data-testid="button-submit-inquiry"
                 >
-                  Submit Inquiry
+                  <EditableText id="contact-submit-btn" defaultText="Submit Inquiry" />
                 </button>
               </form>
             </div>
@@ -826,14 +1163,24 @@ export default function Home() {
           <div className="mb-4 md:mb-0">
             <div className="flex items-center justify-center md:justify-start mb-2">
               <Globe size={20} className="mr-2 text-blue-600" />
-              <span className="font-bold text-white">InterBridge Trans & Trade</span>
+              <EditableText
+                id="footer-brand"
+                defaultText="InterBridge Trans & Trade"
+                className="font-bold text-white"
+                element="span"
+              />
             </div>
-            <p className="text-sm">Your reliable partner for manufacturing & translation.</p>
+            <EditableText
+              id="footer-tagline"
+              defaultText="Your reliable partner for manufacturing & translation."
+              element="p"
+              className="text-sm"
+            />
           </div>
           <div className="flex space-x-8 text-sm flex-wrap justify-center gap-4">
-            <a href="#" className="hover:text-white transition-colors" data-testid="link-privacy">Privacy Policy</a>
-            <a href="#" className="hover:text-white transition-colors" data-testid="link-terms">Terms of Service</a>
-            <a href="#" className="hover:text-white transition-colors" data-testid="link-linkedin">LinkedIn</a>
+            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+            <a href="#" className="hover:text-white transition-colors">LinkedIn</a>
           </div>
         </div>
       </footer>
