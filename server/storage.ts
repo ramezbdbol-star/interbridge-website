@@ -2,11 +2,12 @@ import {
   type User, type InsertUser,
   type SiteContent, type InsertContent,
   type AdminSession, type InsertSession,
-  users, siteContent, adminSessions
+  type ContactRequest, type InsertContactRequest,
+  users, siteContent, adminSessions, contactRequests
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
-import { eq, lt } from "drizzle-orm";
+import { eq, lt, desc } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -21,6 +22,9 @@ export interface IStorage {
   getSessionByToken(token: string): Promise<AdminSession | undefined>;
   deleteSession(token: string): Promise<void>;
   cleanExpiredSessions(): Promise<void>;
+  
+  createContactRequest(request: InsertContactRequest): Promise<ContactRequest>;
+  getAllContactRequests(): Promise<ContactRequest[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -91,6 +95,15 @@ export class DatabaseStorage implements IStorage {
   async cleanExpiredSessions(): Promise<void> {
     const now = new Date();
     await db.delete(adminSessions).where(lt(adminSessions.expiresAt, now));
+  }
+
+  async createContactRequest(request: InsertContactRequest): Promise<ContactRequest> {
+    const [created] = await db.insert(contactRequests).values(request).returning();
+    return created;
+  }
+
+  async getAllContactRequests(): Promise<ContactRequest[]> {
+    return await db.select().from(contactRequests).orderBy(desc(contactRequests.createdAt));
   }
 }
 
