@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Globe, 
   Factory, 
@@ -21,12 +21,35 @@ import {
   HelpCircle,
   LayoutList,
   ChevronDown,
-  ZoomIn
+  ZoomIn,
+  Edit2,
+  Check
 } from 'lucide-react';
+
+interface EditableContent {
+  [key: string]: string;
+}
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editableContent, setEditableContent] = useState<EditableContent>({});
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('interbridge_content');
+    if (saved) {
+      setEditableContent(JSON.parse(saved));
+    }
+  }, []);
+
+  // Save to localStorage whenever content changes
+  useEffect(() => {
+    if (Object.keys(editableContent).length > 0) {
+      localStorage.setItem('interbridge_content', JSON.stringify(editableContent));
+    }
+  }, [editableContent]);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const toggleFaq = (index: number) => setOpenFaq(openFaq === index ? null : index);
@@ -37,6 +60,42 @@ export default function Home() {
       element.scrollIntoView({ behavior: 'smooth' });
       setIsMenuOpen(false);
     }
+  };
+
+  const getEditableText = (key: string, defaultText: string) => {
+    return editableContent[key] || defaultText;
+  };
+
+  const updateEditableText = (key: string, value: string) => {
+    setEditableContent(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  const EditableText = ({ id, defaultText, element: Element = 'span', className = '' }: {
+    id: string;
+    defaultText: string;
+    element?: string;
+    className?: string;
+  }) => {
+    const text = getEditableText(id, defaultText);
+    const ElementComponent = Element as any;
+
+    if (!isEditMode) {
+      return <ElementComponent className={className}>{text}</ElementComponent>;
+    }
+
+    return (
+      <ElementComponent
+        contentEditable
+        suppressContentEditableWarning
+        onBlur={(e: any) => updateEditableText(id, e.currentTarget.textContent || '')}
+        className={`${className} bg-blue-50 border-2 border-blue-400 rounded px-1 outline-none focus:bg-blue-100 cursor-text`}
+      >
+        {text}
+      </ElementComponent>
+    );
   };
 
   return (
@@ -60,7 +119,7 @@ export default function Home() {
             </div>
             
             {/* Desktop Menu */}
-            <div className="hidden lg:flex space-x-6 items-center">
+            <div className="hidden lg:flex space-x-6 items-center gap-2">
               <button 
                 onClick={() => scrollToSection('services')} 
                 className="text-slate-600 hover:text-blue-700 font-medium transition-colors"
@@ -95,6 +154,24 @@ export default function Home() {
                 data-testid="button-get-quote"
               >
                 Get a Quote
+              </button>
+              <div className="w-px h-6 bg-slate-200 mx-2"></div>
+              <button 
+                onClick={() => setIsEditMode(!isEditMode)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${isEditMode ? 'bg-green-100 text-green-700 border border-green-300' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'}`}
+                data-testid="button-edit-mode"
+              >
+                {isEditMode ? (
+                  <>
+                    <Check size={18} />
+                    Done Editing
+                  </>
+                ) : (
+                  <>
+                    <Edit2 size={18} />
+                    Edit Mode
+                  </>
+                )}
               </button>
             </div>
 
