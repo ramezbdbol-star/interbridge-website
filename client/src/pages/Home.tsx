@@ -3,6 +3,8 @@ import { useLocation } from 'wouter';
 import { useAdmin } from '@/lib/adminContext';
 import { useContent } from '@/lib/contentContext';
 import { useToast } from '@/hooks/use-toast';
+import { useMutation } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 import { 
   Globe, 
   Factory, 
@@ -29,7 +31,9 @@ import {
   Save,
   Settings,
   LogOut,
-  Loader2
+  Loader2,
+  CheckCircle,
+  Send
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -81,6 +85,203 @@ function EditableText({ id, defaultText, className = '', element = 'span', multi
     >
       {text}
     </Element>
+  );
+}
+
+interface ContactFormData {
+  firstName: string;
+  lastName: string;
+  email: string;
+  interestedIn: string;
+  message: string;
+}
+
+function ContactForm() {
+  const { toast } = useToast();
+  const [formData, setFormData] = useState<ContactFormData>({
+    firstName: '',
+    lastName: '',
+    email: '',
+    interestedIn: 'sourcing',
+    message: ''
+  });
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const submitMutation = useMutation({
+    mutationFn: async (data: ContactFormData) => {
+      const response = await apiRequest('POST', '/api/contact', data);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Inquiry Submitted!",
+        description: data.message || "We'll get back to you soon.",
+      });
+      setIsSubmitted(true);
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        interestedIn: 'sourcing',
+        message: ''
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Submission Failed",
+        description: "Please try again or contact us directly.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter your first and last name.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!formData.email.trim() || !formData.email.includes('@')) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (!formData.message.trim()) {
+      toast({
+        title: "Message Required",
+        description: "Please tell us about your needs.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    submitMutation.mutate(formData);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
+    if (isSubmitted) setIsSubmitted(false);
+  };
+
+  if (isSubmitted) {
+    return (
+      <div className="text-center py-12">
+        <div className="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+          <CheckCircle className="w-10 h-10 text-green-600" />
+        </div>
+        <h3 className="text-2xl font-bold text-slate-900 mb-2">Thank You!</h3>
+        <p className="text-slate-600 mb-6">Your inquiry has been submitted successfully. We'll get back to you within 24 hours.</p>
+        <Button
+          variant="outline"
+          onClick={() => setIsSubmitted(false)}
+          data-testid="button-send-another"
+        >
+          Send Another Inquiry
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <form className="space-y-4" onSubmit={handleSubmit}>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">First Name *</label>
+          <input 
+            type="text"
+            name="firstName"
+            value={formData.firstName}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" 
+            placeholder="John"
+            data-testid="input-first-name"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Last Name *</label>
+          <input 
+            type="text"
+            name="lastName"
+            value={formData.lastName}
+            onChange={handleChange}
+            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" 
+            placeholder="Doe"
+            data-testid="input-last-name"
+          />
+        </div>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Email Address *</label>
+        <input 
+          type="email"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" 
+          placeholder="john@company.com"
+          data-testid="input-email"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Interested In</label>
+        <select 
+          name="interestedIn"
+          value={formData.interestedIn}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+          data-testid="select-interested-in"
+        >
+          <option value="sourcing">Sourcing & Screening</option>
+          <option value="oem">OEM/ODM Project</option>
+          <option value="interpretation">Interpretation/Visit</option>
+          <option value="qc">Quality Control Only</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Message *</label>
+        <textarea 
+          name="message"
+          value={formData.message}
+          onChange={handleChange}
+          rows={4} 
+          className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" 
+          placeholder="Tell us about your product, MOQ, or specific needs..."
+          data-testid="textarea-message"
+        ></textarea>
+      </div>
+      <Button
+        type="submit"
+        disabled={submitMutation.isPending}
+        className="w-full bg-blue-900 hover:bg-blue-800 text-white py-3 rounded-lg font-bold transition-colors shadow-lg hover:shadow-xl"
+        data-testid="button-submit-inquiry"
+      >
+        {submitMutation.isPending ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Submitting...
+          </>
+        ) : (
+          <>
+            <Send className="w-4 h-4 mr-2" />
+            Submit Inquiry
+          </>
+        )}
+      </Button>
+    </form>
   );
 }
 
@@ -1059,7 +1260,7 @@ export default function Home() {
                     <div className="text-sm text-slate-400">Email Us</div>
                     <EditableText
                       id="contact-email"
-                      defaultText="inquiry@interbridge.com"
+                      defaultText="Moda232320315@gmail.com"
                       className="text-lg font-semibold"
                     />
                   </div>
@@ -1072,7 +1273,7 @@ export default function Home() {
                     <div className="text-sm text-slate-400">Call / WhatsApp</div>
                     <EditableText
                       id="contact-phone"
-                      defaultText="+86 123 4567 8900"
+                      defaultText="+86 15325467680"
                       className="text-lg font-semibold"
                     />
                   </div>
@@ -1100,58 +1301,7 @@ export default function Home() {
                 element="h3"
                 className="text-2xl font-bold mb-6"
               />
-              <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">First Name</label>
-                    <input 
-                      type="text" 
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" 
-                      placeholder="John"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Last Name</label>
-                    <input 
-                      type="text" 
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" 
-                      placeholder="Doe"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
-                  <input 
-                    type="email" 
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" 
-                    placeholder="john@company.com"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Interested In</label>
-                  <select className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
-                    <option value="sourcing">Sourcing & Screening</option>
-                    <option value="oem">OEM/ODM Project</option>
-                    <option value="interpretation">Interpretation/Visit</option>
-                    <option value="qc">Quality Control Only</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Message</label>
-                  <textarea 
-                    rows={4} 
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" 
-                    placeholder="Tell us about your product, MOQ, or specific needs..."
-                  ></textarea>
-                </div>
-                <button 
-                  type="submit"
-                  className="w-full bg-blue-900 text-white py-3 rounded-lg font-bold hover:bg-blue-800 transition-colors shadow-lg hover:shadow-xl"
-                >
-                  <EditableText id="contact-submit-btn" defaultText="Submit Inquiry" />
-                </button>
-              </form>
+              <ContactForm />
             </div>
           </div>
         </div>

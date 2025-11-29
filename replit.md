@@ -93,6 +93,15 @@ Tables:
    - `createdAt` (timestamp)
    - `expiresAt` (timestamp for automatic expiration)
 
+4. **contactRequests** - Customer inquiry submissions
+   - `id` (UUID primary key, auto-generated)
+   - `firstName` (text)
+   - `lastName` (text)
+   - `email` (text)
+   - `interestedIn` (text: sourcing, oem, interpretation, qc, other)
+   - `message` (text)
+   - `createdAt` (timestamp)
+
 **Storage Layer**
 - Abstraction via `IStorage` interface for potential future database swaps
 - `DatabaseStorage` class implements interface with Drizzle queries
@@ -151,6 +160,14 @@ Tables:
   - Requires `DATABASE_URL` environment variable
   - WebSocket-based connection for serverless environments
   - Auto-scaling and connection pooling
+
+**Email Notifications (Optional)**
+- **Nodemailer** with Gmail SMTP for contact form notifications
+  - Target email: Moda232320315@gmail.com
+  - Target phone: +86 15325467680
+  - Requires `SMTP_USER` and `SMTP_PASS` environment variables for email delivery
+  - If SMTP credentials are not configured, form submissions are still saved to database but email notifications are skipped
+  - To enable email notifications: Set SMTP_USER to a Gmail address and SMTP_PASS to a Gmail App Password
 
 ### UI Libraries
 
