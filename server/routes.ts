@@ -2,9 +2,11 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { randomBytes } from "crypto";
+import { insertContactRequestSchema } from "@shared/schema";
+import { sendContactNotification } from "./email";
 
-const ADMIN_USERNAME = "Mirabelle";
-const ADMIN_PASSWORD = "Mira.112233";
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "Mirabelle";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Mira.112233";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -136,6 +138,32 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Batch update error:", error);
       res.status(500).json({ error: "Failed to update content" });
+    }
+  });
+
+  app.post("/api/contact", async (req: Request, res: Response) => {
+    try {
+      const parseResult = insertContactRequestSchema.safeParse(req.body);
+      
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: "Invalid form data", 
+          details: parseResult.error.errors 
+        });
+      }
+      
+      const contactRequest = await storage.createContactRequest(parseResult.data);
+      
+      const emailSent = await sendContactNotification(parseResult.data);
+      
+      res.json({ 
+        success: true, 
+        message: "Your inquiry has been submitted successfully! We will get back to you soon.",
+        emailSent 
+      });
+    } catch (error) {
+      console.error("Contact form error:", error);
+      res.status(500).json({ error: "Failed to submit inquiry. Please try again." });
     }
   });
 
