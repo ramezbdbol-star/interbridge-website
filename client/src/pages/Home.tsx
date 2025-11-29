@@ -247,13 +247,18 @@ export default function Home() {
                 <span className="w-2 h-2 rounded-full bg-green-400 mr-2 animate-pulse"></span>
                 <span className="text-sm font-medium tracking-wide text-blue-100">Bridging the Gap to Global Markets</span>
               </div>
-              <h1 className="text-5xl lg:text-6xl font-extrabold leading-tight" data-testid="text-hero-headline">
-                Direct Factory Access. <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-white">Zero Middlemen.</span>
-              </h1>
-              <p className="text-lg text-blue-100 max-w-xl leading-relaxed" data-testid="text-hero-description">
-                Your bilingual partner for sourcing, negotiation, and logistics. From small-batch orders to OEM projects, InterBridge connects you directly to the production line.
-              </p>
+              <EditableText 
+                id="hero-headline"
+                defaultText="Direct Factory Access. Zero Middlemen."
+                element="h1"
+                className="text-5xl lg:text-6xl font-extrabold leading-tight"
+              />
+              <EditableText 
+                id="hero-description"
+                defaultText="Your bilingual partner for sourcing, negotiation, and logistics. From small-batch orders to OEM projects, InterBridge connects you directly to the production line."
+                element="p"
+                className="text-lg text-blue-100 max-w-xl leading-relaxed"
+              />
               <div className="flex flex-col sm:flex-row gap-4">
                 <button 
                   onClick={() => scrollToSection('contact')} 
@@ -318,10 +323,18 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <span className="text-blue-600 font-semibold tracking-wider uppercase text-sm">What I Can Do</span>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mt-2 mb-4" data-testid="text-services-title">Comprehensive Trade Services</h2>
-            <p className="text-slate-600 max-w-2xl mx-auto">
-              A full suite of services designed to make your import business safe, transparent, and scalable.
-            </p>
+            <EditableText 
+              id="services-title"
+              defaultText="Comprehensive Trade Services"
+              element="h2"
+              className="text-3xl md:text-4xl font-bold text-slate-900 mt-2 mb-4"
+            />
+            <EditableText 
+              id="services-subtitle"
+              defaultText="A full suite of services designed to make your import business safe, transparent, and scalable."
+              element="p"
+              className="text-slate-600 max-w-2xl mx-auto"
+            />
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
