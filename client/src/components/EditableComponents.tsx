@@ -14,7 +14,9 @@ import {
   X,
   Check,
   Edit3,
-  Move
+  Move,
+  Copy,
+  Trash2
 } from 'lucide-react';
 
 interface EditableTextProps {
@@ -156,7 +158,9 @@ export function EditableSection({ id, name, children, className = '' }: Editable
     toggleSectionVisibility,
     moveSectionUp,
     moveSectionDown,
-    getSectionOrder
+    getSectionOrder,
+    duplicateSection,
+    deleteCustomSection
   } = useContent();
   
   const visible = isSectionVisible(id);
@@ -164,6 +168,7 @@ export function EditableSection({ id, name, children, className = '' }: Editable
   const currentIndex = order.indexOf(id);
   const canMoveUp = currentIndex > 0;
   const canMoveDown = currentIndex < order.length - 1;
+  const isCustomSection = id.startsWith('custom-');
 
   if (!visible && !isEditMode) {
     return null;
@@ -206,6 +211,27 @@ export function EditableSection({ id, name, children, className = '' }: Editable
           >
             {visible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
           </button>
+          {isCustomSection && (
+            <>
+              <div className="w-full h-px bg-slate-200 dark:bg-slate-700" />
+              <button
+                onClick={() => duplicateSection(id)}
+                className="p-1.5 hover:bg-blue-100 dark:hover:bg-blue-900/30 rounded text-blue-600"
+                title="Duplicate section"
+                data-testid={`section-duplicate-${id}`}
+              >
+                <Copy className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => deleteCustomSection(id)}
+                className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded text-red-600"
+                title="Delete section"
+                data-testid={`section-delete-${id}`}
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </>
+          )}
         </div>
       )}
       
