@@ -927,7 +927,7 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
             <img 
               src="/logo.png" 
               alt="InterBridge Solutions Logo" 
-              className="w-10 h-10 mr-3 object-contain"
+              className="w-14 h-14 mr-3 object-contain"
             />
             <div className="flex flex-col">
               <EditableText
@@ -1651,7 +1651,7 @@ function Footer() {
             <img 
               src="/logo.png" 
               alt="InterBridge Solutions Logo" 
-              className="w-8 h-8 mr-2 object-contain"
+              className="w-10 h-10 mr-2 object-contain"
             />
             <span className="font-bold text-white">InterBridge Trans & Trade</span>
           </div>
