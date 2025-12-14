@@ -103,9 +103,17 @@ export function EditableText({ id, defaultText, className = '', element = 'span'
       </div>
       
       {showPositioning && (
-        <div className="absolute top-full left-0 mt-2 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-blue-400 p-3 min-w-[200px] z-20">
+        <div 
+          className="fixed bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-blue-400 p-3 min-w-[200px] z-[100]"
+          style={{ 
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)'
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
           <div className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">Position Adjustment</div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div>
               <label className="text-xs text-slate-600 dark:text-slate-400 flex justify-between mb-1">
                 <span>Horizontal: {position.x}px</span>
@@ -115,8 +123,12 @@ export function EditableText({ id, defaultText, className = '', element = 'span'
                 min="-100"
                 max="100"
                 value={position.x}
-                onChange={(e) => updatePosition(id, { x: parseInt(e.target.value), y: position.y })}
-                className="w-full"
+                onChange={(e) => {
+                  e.stopPropagation();
+                  updatePosition(id, { x: parseInt(e.target.value), y: position.y });
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 data-testid={`slider-x-${id}`}
               />
             </div>
@@ -129,14 +141,33 @@ export function EditableText({ id, defaultText, className = '', element = 'span'
                 min="-100"
                 max="100"
                 value={position.y}
-                onChange={(e) => updatePosition(id, { x: position.x, y: parseInt(e.target.value) })}
-                className="w-full"
+                onChange={(e) => {
+                  e.stopPropagation();
+                  updatePosition(id, { x: position.x, y: parseInt(e.target.value) });
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 data-testid={`slider-y-${id}`}
               />
             </div>
-            <Button size="sm" variant="ghost" onClick={() => setShowPositioning(false)} className="w-full text-xs">
-              Done
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => updatePosition(id, { x: 0, y: 0 })} 
+                className="flex-1 text-xs"
+              >
+                Reset
+              </Button>
+              <Button 
+                size="sm" 
+                variant="default" 
+                onClick={() => setShowPositioning(false)} 
+                className="flex-1 text-xs"
+              >
+                Done
+              </Button>
+            </div>
           </div>
         </div>
       )}
