@@ -104,8 +104,11 @@ This is an automated notification from your InterBridge website.
 
     console.log('Email notification sent successfully to', ADMIN_EMAIL);
     return true;
-  } catch (error) {
-    console.error('Failed to send email notification:', error);
+  } catch (error: any) {
+    console.error('Failed to send email notification:');
+    console.error('Error code:', error?.code);
+    console.error('Error message:', error?.message);
+    console.error('Full error:', JSON.stringify(error, null, 2));
     return false;
   }
 }
