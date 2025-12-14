@@ -349,45 +349,47 @@ function SectionManager() {
               <span className={`flex-1 text-xs font-medium truncate ${visible ? 'text-slate-700' : 'text-red-500 line-through'}`}>
                 {getSectionName(sectionId)}
               </span>
-              <div className="flex items-center gap-0.5">
-                {isCustom && (
-                  <>
-                    <button
-                      onClick={() => handleDuplicateSection(sectionId)}
-                      className="p-0.5 text-slate-400 hover:text-blue-600"
-                      title="Duplicate section"
-                      data-testid={`manager-duplicate-${sectionId}`}
-                    >
-                      <Copy className="w-3 h-3" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteSection(sectionId)}
-                      className="p-0.5 text-slate-400 hover:text-red-600"
-                      title="Delete section"
-                      data-testid={`manager-delete-${sectionId}`}
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </>
-                )}
-                <div className="flex flex-col">
+              <div className="flex items-center gap-1">
+                <div className="flex items-center bg-slate-200 rounded overflow-hidden">
                   <button
                     onClick={() => moveSectionUp(sectionId)}
                     disabled={index === 0}
-                    className="p-0.5 text-slate-400 hover:text-slate-600 disabled:opacity-30"
+                    className="p-1 text-slate-600 hover:bg-blue-500 hover:text-white disabled:opacity-30 disabled:hover:bg-slate-200 disabled:hover:text-slate-600 transition-colors"
+                    title="Move section up"
                     data-testid={`manager-up-${sectionId}`}
                   >
-                    <ChevronDown className="w-3 h-3 rotate-180" />
+                    <ChevronDown className="w-4 h-4 rotate-180" />
                   </button>
                   <button
                     onClick={() => moveSectionDown(sectionId)}
                     disabled={index === order.length - 1}
-                    className="p-0.5 text-slate-400 hover:text-slate-600 disabled:opacity-30"
+                    className="p-1 text-slate-600 hover:bg-blue-500 hover:text-white disabled:opacity-30 disabled:hover:bg-slate-200 disabled:hover:text-slate-600 transition-colors"
+                    title="Move section down"
                     data-testid={`manager-down-${sectionId}`}
                   >
-                    <ChevronDown className="w-3 h-3" />
+                    <ChevronDown className="w-4 h-4" />
                   </button>
                 </div>
+                {isCustom && (
+                  <div className="flex items-center gap-0.5">
+                    <button
+                      onClick={() => handleDuplicateSection(sectionId)}
+                      className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                      title="Duplicate section"
+                      data-testid={`manager-duplicate-${sectionId}`}
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteSection(sectionId)}
+                      className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                      title="Delete section"
+                      data-testid={`manager-delete-${sectionId}`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           );
