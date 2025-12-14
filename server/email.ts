@@ -1,4 +1,6 @@
-const ADMIN_EMAIL = 'Moda232320315@gmail.com';
+import nodemailer from 'nodemailer';
+
+const ADMIN_EMAIL = 'interbridge.mira@gmail.com';
 const ADMIN_PHONE = '+86 15325467680';
 
 interface ContactFormData {
@@ -10,15 +12,24 @@ interface ContactFormData {
 }
 
 export async function sendContactNotification(data: ContactFormData): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY;
+  const appPassword = process.env.GMAIL_APP_PASSWORD;
   
-  if (!apiKey) {
-    console.log('Email notification skipped: RESEND_API_KEY not configured');
+  if (!appPassword) {
+    console.log('Email notification skipped: GMAIL_APP_PASSWORD not configured');
     console.log('New contact request received:', data);
     return false;
   }
 
   try {
+    // Create transporter using Gmail SMTP
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: ADMIN_EMAIL,
+        pass: appPassword,
+      },
+    });
+
     const serviceLabels: Record<string, string> = {
       'sourcing': 'Sourcing & Screening',
       'oem': 'OEM/ODM Project',
@@ -83,26 +94,13 @@ ${data.message}
 This is an automated notification from your InterBridge website.
     `;
 
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        from: 'InterBridge <onboarding@resend.dev>',
-        to: ADMIN_EMAIL,
-        subject: `New Inquiry from ${data.firstName} ${data.lastName} - InterBridge`,
-        html: emailHtml,
-        text: emailText,
-      }),
+    await transporter.sendMail({
+      from: `InterBridge <${ADMIN_EMAIL}>`,
+      to: ADMIN_EMAIL,
+      subject: `New Inquiry from ${data.firstName} ${data.lastName} - InterBridge`,
+      html: emailHtml,
+      text: emailText,
     });
-
-    if (!response.ok) {
-      const error = await response.json();
-      console.error('Resend API error:', error);
-      return false;
-    }
 
     console.log('Email notification sent successfully to', ADMIN_EMAIL);
     return true;
