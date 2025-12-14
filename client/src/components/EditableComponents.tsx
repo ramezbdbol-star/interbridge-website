@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from 'react';
+import { useState, useRef, useEffect, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useContent } from '@/lib/contentContext';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,6 +34,20 @@ export function EditableText({ id, defaultText, className = '', element = 'span'
   const visible = isElementVisible(id);
   const position = getPosition(id);
   const [showPositioning, setShowPositioning] = useState(false);
+  const elementRef = useRef<HTMLSpanElement>(null);
+  const [popupPosition, setPopupPosition] = useState({ top: 0, left: 0 });
+
+  // Calculate popup position when opening
+  useEffect(() => {
+    if (showPositioning && elementRef.current) {
+      const rect = elementRef.current.getBoundingClientRect();
+      // Position popup below the element, centered horizontally
+      setPopupPosition({
+        top: rect.bottom + 10,
+        left: rect.left + (rect.width / 2) - 110 // 110 = half of min-w-[220px]
+      });
+    }
+  }, [showPositioning]);
 
   if (!visible && !isEditMode) {
     return null;
@@ -62,7 +77,7 @@ export function EditableText({ id, defaultText, className = '', element = 'span'
   const Element = element;
 
   return (
-    <span className="relative inline-block group/editable" style={{ transform: `translateX(${position.x}px) translateY(${position.y}px)` }}>
+    <span ref={elementRef} className="relative inline-block group/editable" style={{ transform: `translateX(${position.x}px) translateY(${position.y}px)` }}>
       <Element
         contentEditable
         suppressContentEditableWarning
@@ -102,20 +117,20 @@ export function EditableText({ id, defaultText, className = '', element = 'span'
         </button>
       </div>
       
-      {showPositioning && (
+      {showPositioning && createPortal(
         <div 
-          className="fixed bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-blue-400 p-3 min-w-[200px] z-[100]"
+          className="fixed bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-blue-400 p-4 w-[220px] z-[9999]"
           style={{ 
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)'
+            top: `${popupPosition.top}px`,
+            left: `${Math.max(10, popupPosition.left)}px`
           }}
           onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
         >
-          <div className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">Position Adjustment</div>
-          <div className="space-y-3">
+          <div className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-3">Position Adjustment</div>
+          <div className="space-y-4">
             <div>
-              <label className="text-xs text-slate-600 dark:text-slate-400 flex justify-between mb-1">
+              <label className="text-xs text-slate-600 dark:text-slate-400 flex justify-between mb-2">
                 <span>Horizontal: {position.x}px</span>
               </label>
               <input
@@ -133,7 +148,7 @@ export function EditableText({ id, defaultText, className = '', element = 'span'
               />
             </div>
             <div>
-              <label className="text-xs text-slate-600 dark:text-slate-400 flex justify-between mb-1">
+              <label className="text-xs text-slate-600 dark:text-slate-400 flex justify-between mb-2">
                 <span>Vertical: {position.y}px</span>
               </label>
               <input
@@ -169,7 +184,8 @@ export function EditableText({ id, defaultText, className = '', element = 'span'
               </Button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </span>
   );
