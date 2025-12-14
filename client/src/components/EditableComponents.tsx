@@ -13,7 +13,8 @@ import {
   GripVertical,
   X,
   Check,
-  Edit3
+  Edit3,
+  Move
 } from 'lucide-react';
 
 interface EditableTextProps {
@@ -25,9 +26,11 @@ interface EditableTextProps {
 }
 
 export function EditableText({ id, defaultText, className = '', element = 'span', multiline = false }: EditableTextProps) {
-  const { isEditMode, getContent, updateContent, isElementVisible, toggleElementVisibility } = useContent();
+  const { isEditMode, getContent, updateContent, isElementVisible, toggleElementVisibility, getPosition, updatePosition } = useContent();
   const text = getContent(id, defaultText);
   const visible = isElementVisible(id);
+  const position = getPosition(id);
+  const [showPositioning, setShowPositioning] = useState(false);
 
   if (!visible && !isEditMode) {
     return null;
@@ -57,7 +60,7 @@ export function EditableText({ id, defaultText, className = '', element = 'span'
   const Element = element;
 
   return (
-    <span className="relative inline-block group/editable">
+    <span className="relative inline-block group/editable" style={{ transform: `translateX(${position.x}px) translateY(${position.y}px)` }}>
       <Element
         contentEditable
         suppressContentEditableWarning
@@ -72,17 +75,69 @@ export function EditableText({ id, defaultText, className = '', element = 'span'
       >
         {text}
       </Element>
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          toggleElementVisibility(id);
-        }}
-        className="absolute -top-2 -right-2 w-5 h-5 bg-white dark:bg-slate-800 border border-slate-300 rounded-full flex items-center justify-center opacity-0 group-hover/editable:opacity-100 transition-opacity shadow-sm z-10"
-        title={visible ? 'Hide this text' : 'Show this text'}
-        data-testid={`toggle-visibility-${id}`}
-      >
-        {visible ? <Eye className="w-3 h-3 text-slate-600" /> : <EyeOff className="w-3 h-3 text-red-500" />}
-      </button>
+      <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover/editable:opacity-100 transition-opacity z-10">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowPositioning(!showPositioning);
+          }}
+          className="w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center shadow-sm hover:bg-blue-600"
+          title="Adjust position"
+          data-testid={`position-button-${id}`}
+        >
+          <Move className="w-3 h-3" />
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleElementVisibility(id);
+          }}
+          className="w-5 h-5 bg-white dark:bg-slate-800 border border-slate-300 rounded-full flex items-center justify-center shadow-sm hover:bg-slate-100"
+          title={visible ? 'Hide this text' : 'Show this text'}
+          data-testid={`toggle-visibility-${id}`}
+        >
+          {visible ? <Eye className="w-3 h-3 text-slate-600" /> : <EyeOff className="w-3 h-3 text-red-500" />}
+        </button>
+      </div>
+      
+      {showPositioning && (
+        <div className="absolute top-full left-0 mt-2 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-blue-400 p-3 min-w-[200px] z-20">
+          <div className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">Position Adjustment</div>
+          <div className="space-y-2">
+            <div>
+              <label className="text-xs text-slate-600 dark:text-slate-400 flex justify-between mb-1">
+                <span>Horizontal: {position.x}px</span>
+              </label>
+              <input
+                type="range"
+                min="-100"
+                max="100"
+                value={position.x}
+                onChange={(e) => updatePosition(id, { x: parseInt(e.target.value), y: position.y })}
+                className="w-full"
+                data-testid={`slider-x-${id}`}
+              />
+            </div>
+            <div>
+              <label className="text-xs text-slate-600 dark:text-slate-400 flex justify-between mb-1">
+                <span>Vertical: {position.y}px</span>
+              </label>
+              <input
+                type="range"
+                min="-100"
+                max="100"
+                value={position.y}
+                onChange={(e) => updatePosition(id, { x: position.x, y: parseInt(e.target.value) })}
+                className="w-full"
+                data-testid={`slider-y-${id}`}
+              />
+            </div>
+            <Button size="sm" variant="ghost" onClick={() => setShowPositioning(false)} className="w-full text-xs">
+              Done
+            </Button>
+          </div>
+        </div>
+      )}
     </span>
   );
 }

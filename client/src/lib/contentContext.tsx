@@ -15,6 +15,11 @@ interface ButtonConfig {
   style?: 'primary' | 'secondary' | 'outline' | 'ghost';
 }
 
+interface Position {
+  x: number;
+  y: number;
+}
+
 export interface CustomSection {
   id: string;
   type: 'text' | 'features' | 'cta' | 'testimonial' | 'gallery';
@@ -61,6 +66,8 @@ interface ContentContextType {
   updateCustomSection: (id: string, updates: Partial<CustomSection>) => void;
   deleteCustomSection: (id: string) => void;
   duplicateSection: (sectionId: string) => string | null;
+  getPosition: (id: string) => Position;
+  updatePosition: (id: string, position: Position) => void;
 }
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
@@ -392,6 +399,24 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   const hasUnsavedChanges = Object.keys(pendingChanges).length > 0;
 
+  const getPosition = (id: string): Position => {
+    const positionKey = `_position_${id}`;
+    const stored = getContent(positionKey, '');
+    if (stored) {
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return { x: 0, y: 0 };
+      }
+    }
+    return { x: 0, y: 0 };
+  };
+
+  const updatePosition = (id: string, position: Position) => {
+    const positionKey = `_position_${id}`;
+    updateContent(positionKey, JSON.stringify(position));
+  };
+
   return (
     <ContentContext.Provider value={{
       content,
@@ -417,7 +442,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       addCustomSection,
       updateCustomSection,
       deleteCustomSection,
-      duplicateSection
+      duplicateSection,
+      getPosition,
+      updatePosition
     }}>
       {children}
     </ContentContext.Provider>
