@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useAdmin } from '@/lib/adminContext';
 import { useContent, type CustomSection } from '@/lib/contentContext';
@@ -251,7 +251,7 @@ function ContactForm() {
   );
 }
 
-function SectionManager() {
+function SectionManager({ onClose }: { onClose: () => void }) {
   const { 
     getSectionOrder, 
     isSectionVisible, 
@@ -267,6 +267,18 @@ function SectionManager() {
   const order = getSectionOrder();
   const customSections = getCustomSections();
   const [showAddMenu, setShowAddMenu] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [onClose]);
   
   const sectionNames: Record<string, string> = {
     hero: 'Hero Banner',
@@ -323,10 +335,21 @@ function SectionManager() {
   };
 
   return (
-    <div className="fixed left-6 top-1/2 -translate-y-1/2 z-50 bg-white rounded-xl shadow-2xl border border-slate-200 p-3 max-w-[220px] max-h-[80vh] overflow-y-auto">
+    <div 
+      ref={panelRef}
+      className="fixed left-6 top-1/2 -translate-y-1/2 z-50 bg-white rounded-xl shadow-2xl border border-slate-200 p-3 max-w-[220px] max-h-[80vh] overflow-y-auto"
+    >
       <div className="flex items-center gap-2 pb-2 border-b border-slate-200 mb-2">
         <Layers className="w-4 h-4 text-blue-600" />
         <span className="text-sm font-bold text-slate-700">Sections</span>
+        <button 
+          onClick={onClose}
+          className="ml-auto p-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded"
+          title="Close panel"
+          data-testid="button-close-sections"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
       </div>
       
       <div className="space-y-1 mb-3">
@@ -700,6 +723,7 @@ function CustomSectionRenderer({ section }: { section: CustomSection }) {
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [showSectionPanel, setShowSectionPanel] = useState(true);
   const { isAdmin, logout } = useAdmin();
   const { isEditMode, setEditMode, saveAllChanges, hasUnsavedChanges, getSectionOrder, isSectionVisible, getCustomSections, pendingChanges } = useContent();
   const [, setLocation] = useLocation();
@@ -852,7 +876,18 @@ export default function Home() {
         </div>
       )}
 
-      {isEditMode && <SectionManager />}
+      {isEditMode && showSectionPanel && <SectionManager onClose={() => setShowSectionPanel(false)} />}
+      
+      {isEditMode && !showSectionPanel && (
+        <button
+          onClick={() => setShowSectionPanel(true)}
+          className="fixed left-6 top-1/2 -translate-y-1/2 z-50 bg-white rounded-xl shadow-2xl border border-slate-200 p-3 hover:bg-slate-50 transition-colors"
+          title="Show section manager"
+          data-testid="button-show-sections"
+        >
+          <Layers className="w-5 h-5 text-blue-600" />
+        </button>
+      )}
 
       <Navigation 
         scrollToSection={scrollToSection} 
