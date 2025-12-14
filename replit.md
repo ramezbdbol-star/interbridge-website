@@ -10,6 +10,27 @@ The application is built as a full-stack web application with an editable conten
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Updates (December 14, 2025)
+
+**Enhanced CMS Features:**
+- Added flexible custom section creation with 5 templates: Text Block, Features Grid, Call-to-Action, Testimonial, Image Gallery
+- Implemented section management panel with duplicate, delete, reorder, and visibility toggle controls
+- Custom sections stored as JSON in siteContent table
+- Full inline editing support for custom sections with visual feedback
+- Section order persistence and management
+
+**Email Integration:**
+- Migrated from Nodemailer to Resend email service
+- Contact form submissions now trigger email notifications to Moda232320315@gmail.com
+- Requires RESEND_API_KEY secret (user must provide their own API key)
+- Email notifications are optional - form submissions are saved to database even if email sending fails
+
+**Domain Setup:**
+- Domain interbridge-solutions.com connected via Namecheap DNS records
+- A record (34.111.179.208) and TXT verification record configured
+- Domain verified in Replit deployment settings
+- Note: May take time for DNS propagation to complete fully
+
 ## System Architecture
 
 ### Frontend Architecture
@@ -38,6 +59,14 @@ Preferred communication style: Simple, everyday language.
 - Custom contexts: `AdminContext` for authentication state, `ContentContext` for CMS functionality
 - Local component state with React hooks
 
+**CMS System**
+- Section visibility toggles with UI indicators
+- Section reordering with up/down controls
+- Add custom section feature with type selection
+- Duplicate and delete controls for custom sections
+- Inline editing with visual focus indicators (blue rings)
+- Content change tracking with unsaved changes counter
+
 ### Backend Architecture
 
 **Server Framework**
@@ -50,12 +79,19 @@ Preferred communication style: Simple, everyday language.
 - Admin authentication endpoints: `/api/admin/login`, `/api/admin/logout`, `/api/admin/verify`
 - Content management endpoints for retrieving and updating site content
 - Token-based authentication using bearer tokens stored in `localStorage`
+- Contact form submission endpoints with email notification trigger
 
 **Session Management**
 - Custom session system using database-backed tokens
 - Sessions stored in `adminSessions` table with expiration timestamps
 - Automatic cleanup of expired sessions
 - 24-hour session lifetime
+
+**Email Service**
+- Resend API integration for transactional emails
+- Requires RESEND_API_KEY environment variable
+- Email template with HTML and text fallback
+- Contact notifications include: name, email, service interest, and message
 
 **Development vs Production**
 - Development mode uses Vite middleware for HMR and SSR of React application
@@ -84,7 +120,7 @@ Tables:
 
 2. **siteContent** - CMS content storage
    - `id` (varchar primary key, semantic content IDs)
-   - `content` (text, stores the actual content)
+   - `content` (text, stores the actual content or JSON for custom sections)
    - `updatedAt` (timestamp, tracks last modification)
 
 3. **adminSessions** - Authentication sessions
@@ -101,6 +137,11 @@ Tables:
    - `interestedIn` (text: sourcing, oem, interpretation, qc, other)
    - `message` (text)
    - `createdAt` (timestamp)
+
+**Custom Section Storage**
+- Stored in `siteContent` table using key `_custom_sections`
+- Value is JSON array of section objects with full configuration
+- Section order stored separately in `_section_order` key
 
 **Storage Layer**
 - Abstraction via `IStorage` interface for potential future database swaps
@@ -137,19 +178,28 @@ Tables:
 - Changes tracked in `ContentContext` as pending modifications
 - Content identified by semantic IDs (e.g., "hero-headline", "service-card-1-title")
 
+**Custom Sections**
+- Support for 5 section types: Text Block, Features Grid, Call-to-Action, Testimonial, Image Gallery
+- Each section type has customizable title, description, background color, and items
+- Sections stored with unique IDs (`custom-{timestamp}-{random}`)
+- Full CRUD operations: create, read, update, delete
+- Duplicate functionality to quickly create variations
+
 **Content Persistence**
 - Pending changes stored in context state (not immediately saved)
 - Admin must explicitly trigger save to persist all changes
 - Batch update via `/api/content` endpoint (one request for all changes)
-- Content stored as plain text in database
+- Content stored as plain text in database, JSON for structured data
 - Default values provided inline for missing content
 
 **Edit Mode UX**
 - Toggle switch in admin panel to enable/disable editing
-- Visual indicators for editable elements
-- Unsaved changes tracker with warning
+- Section manager sidebar on left showing all sections with controls
+- Visual indicators for editable elements (blue rings on focus)
+- Unsaved changes tracker with count
 - Save/cancel operations for all pending modifications
 - Toast notifications for success/error feedback
+- Section visibility indicator in sidebar (eye/crossed-eye icon)
 
 ## External Dependencies
 
@@ -161,13 +211,18 @@ Tables:
   - WebSocket-based connection for serverless environments
   - Auto-scaling and connection pooling
 
-**Email Notifications (Optional)**
-- **Nodemailer** with Gmail SMTP for contact form notifications
+**Email Notifications**
+- **Resend** - Transactional email service
   - Target email: Moda232320315@gmail.com
-  - Target phone: +86 15325467680
-  - Requires `SMTP_USER` and `SMTP_PASS` environment variables for email delivery
-  - If SMTP credentials are not configured, form submissions are still saved to database but email notifications are skipped
-  - To enable email notifications: Set SMTP_USER to a Gmail address and SMTP_PASS to a Gmail App Password
+  - Requires `RESEND_API_KEY` secret (user must provide from Resend account)
+  - Sends HTML + text emails for contact form submissions
+  - If API key not configured, form submissions still save to database but email notifications are skipped
+  - Note: Resend starter plan uses `onboarding@resend.dev` sender domain until custom domain verified
+
+**Domain**
+- **Namecheap** - Domain registrar for interbridge-solutions.com
+  - A record points to Replit IP: 34.111.179.208
+  - TXT record for domain verification
 
 ### UI Libraries
 
@@ -228,3 +283,10 @@ Tables:
 - `class-variance-authority` - Component variant utilities
 - `date-fns` - Date manipulation
 - `nanoid` - Unique ID generation
+
+## Known Issues & Notes
+
+- Domain DNS propagation may take 24-48 hours after configuration
+- Custom domain routing (www subdomain) may require additional Namecheap DNS records
+- Email sender from Resend uses default `onboarding@resend.dev` until custom domain verified
+- No custom email domain verification yet - Resend account needs to be configured
