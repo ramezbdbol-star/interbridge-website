@@ -63,6 +63,7 @@ interface ContentContextType {
   toggleElementVisibility: (elementId: string) => void;
   getCustomSections: () => CustomSection[];
   addCustomSection: (type: CustomSection['type'], name: string) => string;
+  insertSectionAt: (position: number, type: CustomSection['type'], name: string) => string;
   updateCustomSection: (id: string, updates: Partial<CustomSection>) => void;
   deleteCustomSection: (id: string) => void;
   duplicateSection: (sectionId: string) => string | null;
@@ -305,6 +306,27 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     return id;
   };
 
+  const insertSectionAt = (position: number, type: CustomSection['type'], name: string): string => {
+    const id = generateId();
+    const newSection: CustomSection = {
+      id,
+      type,
+      name: name || `New ${type} Section`,
+      visible: true,
+      content: getDefaultContent(type)
+    };
+    
+    const sections = getCustomSections();
+    sections.push(newSection);
+    saveCustomSections(sections);
+    
+    const order = getSectionOrder();
+    order.splice(position, 0, id);
+    saveSectionOrder(order);
+    
+    return id;
+  };
+
   const updateCustomSection = (id: string, updates: Partial<CustomSection>) => {
     const sections = getCustomSections();
     const index = sections.findIndex(s => s.id === id);
@@ -440,6 +462,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       toggleElementVisibility,
       getCustomSections,
       addCustomSection,
+      insertSectionAt,
       updateCustomSection,
       deleteCustomSection,
       duplicateSection,
