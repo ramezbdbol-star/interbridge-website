@@ -924,9 +924,11 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
             onClick={() => window.scrollTo(0,0)}
             data-testid="link-logo"
           >
-            <div className="w-10 h-10 bg-blue-900 rounded-lg flex items-center justify-center text-white mr-3">
-              <Globe size={24} />
-            </div>
+            <img 
+              src="/logo.png" 
+              alt="InterBridge Solutions Logo" 
+              className="w-10 h-10 mr-3 object-contain"
+            />
             <div className="flex flex-col">
               <EditableText
                 id="brand-name"
@@ -1646,9 +1648,11 @@ function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center mb-4 md:mb-0">
-            <div className="w-8 h-8 bg-blue-900 rounded-lg flex items-center justify-center text-white mr-2">
-              <Globe size={18} />
-            </div>
+            <img 
+              src="/logo.png" 
+              alt="InterBridge Solutions Logo" 
+              className="w-8 h-8 mr-2 object-contain"
+            />
             <span className="font-bold text-white">InterBridge Trans & Trade</span>
           </div>
           <EditableText
