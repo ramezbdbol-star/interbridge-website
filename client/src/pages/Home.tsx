@@ -910,12 +910,90 @@ export default function Home() {
   );
 }
 
+const serviceCategories = [
+  { 
+    id: 'sourcing',
+    icon: Search,
+    color: 'blue',
+    title: 'Sourcing & Trade',
+    subServices: [
+      'Product Sourcing',
+      'Factory Matching',
+      'Sample Procurement',
+      'Supplier Verification',
+      'Price Negotiation',
+      'OEM/ODM Solutions',
+      'Bulk Order Management'
+    ]
+  },
+  { 
+    id: 'quality',
+    icon: ShieldCheck,
+    color: 'emerald',
+    title: 'Quality & Inspection',
+    subServices: [
+      'Factory Audits',
+      'Pre-Production Inspection',
+      'During Production (DUPRO)',
+      'Pre-Shipment Inspection (PSI)',
+      'Product Testing & Certification',
+      'Defect Analysis & Reporting'
+    ]
+  },
+  { 
+    id: 'interpretation',
+    icon: Languages,
+    color: 'violet',
+    title: 'Interpretation & Support',
+    subServices: [
+      'Factory Visit Interpretation',
+      'Trade Fair Accompaniment',
+      'Business Meeting Translation',
+      'Document Translation',
+      'Video Call Interpretation',
+      'Cultural Business Consulting'
+    ]
+  },
+  { 
+    id: 'company',
+    icon: Building2,
+    color: 'amber',
+    title: 'Company Registration',
+    subServices: [
+      'WFOE Registration',
+      'Business License Application',
+      'Corporate Bank Account',
+      'Work Visa & Residence Permit',
+      'Registered Address Service',
+      'Annual Compliance & Accounting'
+    ]
+  },
+  { 
+    id: 'experiences',
+    icon: MapPin,
+    color: 'rose',
+    title: 'Guangdong Experiences',
+    subServices: [
+      'Guangzhou City Tours',
+      'Shenzhen Tech Tours',
+      'Premium Shopping',
+      'Underground Market Adventures',
+      'Cantonese Food & Culture',
+      'Factory Town Visits',
+      'Canton Fair VIP Assistance',
+      'Custom Itinerary Planning'
+    ]
+  },
+];
+
 function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: { 
   scrollToSection: (id: string) => void; 
   isMenuOpen: boolean; 
   toggleMenu: () => void;
 }) {
   const { isEditMode } = useContent();
+  const [showServicesDropdown, setShowServicesDropdown] = useState(false);
+  const [expandedMobileCategory, setExpandedMobileCategory] = useState<string | null>(null);
   
   return (
     <nav className="fixed w-full bg-white/95 backdrop-blur-md shadow-sm z-40 transition-all duration-300">
@@ -947,13 +1025,68 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
             </div>
           </div>
           
-          <div className="hidden lg:flex space-x-6 items-center gap-2">
-            <EditableButton
-              id="nav-services"
-              defaultText="Services"
-              defaultLink="#services"
-              className="text-slate-600 hover:text-blue-700 font-medium transition-colors px-3 py-2"
-            />
+          <div className="hidden lg:flex items-center gap-1">
+            {/* Services Dropdown */}
+            <div 
+              className="relative"
+              onMouseEnter={() => setShowServicesDropdown(true)}
+              onMouseLeave={() => setShowServicesDropdown(false)}
+            >
+              <button 
+                className="text-slate-600 hover:text-blue-700 font-medium transition-colors px-3 py-2 flex items-center gap-1"
+                onClick={() => scrollToSection('services')}
+                data-testid="nav-services-dropdown"
+              >
+                Services
+                <ChevronDown className={`w-4 h-4 transition-transform ${showServicesDropdown ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {showServicesDropdown && (
+                <div className="absolute top-full left-0 pt-2 w-[700px]" style={{ left: '-200px' }}>
+                  <div className="bg-white rounded-xl shadow-2xl border border-slate-200 p-4 grid grid-cols-2 gap-4">
+                    {serviceCategories.map((category) => {
+                      const IconComponent = category.icon;
+                      return (
+                        <div 
+                          key={category.id}
+                          className="p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer group"
+                          onClick={() => {
+                            scrollToSection('services');
+                            setShowServicesDropdown(false);
+                          }}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-${category.color}-100 text-${category.color}-600`}>
+                              <IconComponent size={20} />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-slate-900 group-hover:text-blue-700 transition-colors">
+                                {category.title}
+                              </h4>
+                              <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+                                {category.subServices.slice(0, 3).join(' • ')}...
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <div className="col-span-2 pt-3 border-t border-slate-100">
+                      <button 
+                        onClick={() => {
+                          scrollToSection('services');
+                          setShowServicesDropdown(false);
+                        }}
+                        className="text-blue-700 font-medium text-sm hover:text-blue-800 flex items-center gap-1"
+                      >
+                        View All Services <ArrowRight size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <EditableButton
               id="nav-buyers"
               defaultText="For You"
@@ -976,7 +1109,7 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
               id="nav-cta"
               defaultText="Get a Quote"
               defaultLink="#contact"
-              className="bg-blue-900 text-white px-6 py-2.5 rounded-full font-medium hover:bg-blue-800 transition-all shadow-lg hover:shadow-blue-900/20"
+              className="bg-blue-900 text-white px-6 py-2.5 rounded-full font-medium hover:bg-blue-800 transition-all shadow-lg hover:shadow-blue-900/20 ml-2"
             />
           </div>
 
@@ -993,34 +1126,62 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
       </div>
 
       {isMenuOpen && (
-        <div className="lg:hidden bg-white border-t border-slate-100 absolute w-full">
-          <div className="px-4 pt-2 pb-6 space-y-2 shadow-xl">
+        <div className="lg:hidden bg-white border-t border-slate-100 absolute w-full max-h-[80vh] overflow-y-auto">
+          <div className="px-4 pt-2 pb-6 space-y-1 shadow-xl">
+            {/* Mobile Services with Expandable Categories */}
+            <div className="border-b border-slate-100 pb-2">
+              <button 
+                onClick={() => setExpandedMobileCategory(expandedMobileCategory === 'services' ? null : 'services')} 
+                className="flex w-full items-center justify-between px-3 py-3 text-slate-800 font-semibold"
+              >
+                Services
+                <ChevronDown className={`w-5 h-5 transition-transform ${expandedMobileCategory === 'services' ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {expandedMobileCategory === 'services' && (
+                <div className="pl-3 space-y-1 pb-2">
+                  {serviceCategories.map((category) => {
+                    const IconComponent = category.icon;
+                    return (
+                      <button
+                        key={category.id}
+                        onClick={() => {
+                          scrollToSection('services');
+                          toggleMenu();
+                        }}
+                        className="flex items-center gap-3 w-full px-3 py-2 text-left rounded-lg hover:bg-slate-50"
+                      >
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-${category.color}-100 text-${category.color}-600`}>
+                          <IconComponent size={16} />
+                        </div>
+                        <span className="text-slate-700 text-sm font-medium">{category.title}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
             <button 
-              onClick={() => scrollToSection('services')} 
+              onClick={() => { scrollToSection('buyers'); toggleMenu(); }} 
               className="block w-full text-left px-3 py-3 text-slate-600 font-medium border-b border-slate-50"
             >
-              Main Services
+              For You
             </button>
             <button 
-              onClick={() => scrollToSection('buyers')} 
-              className="block w-full text-left px-3 py-3 text-slate-600 font-medium border-b border-slate-50"
-            >
-              Buyer Types
-            </button>
-            <button 
-              onClick={() => scrollToSection('process')} 
+              onClick={() => { scrollToSection('process'); toggleMenu(); }} 
               className="block w-full text-left px-3 py-3 text-slate-600 font-medium border-b border-slate-50"
             >
               Our Process
             </button>
             <button 
-              onClick={() => scrollToSection('faq')} 
+              onClick={() => { scrollToSection('faq'); toggleMenu(); }} 
               className="block w-full text-left px-3 py-3 text-slate-600 font-medium border-b border-slate-50"
             >
               FAQ & Pricing
             </button>
             <button 
-              onClick={() => scrollToSection('contact')} 
+              onClick={() => { scrollToSection('contact'); toggleMenu(); }} 
               className="block w-full text-left px-3 py-3 text-blue-700 font-bold"
             >
               Contact Us
