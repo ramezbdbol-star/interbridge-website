@@ -1150,24 +1150,24 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
             />
 
             {/* Social Icons */}
-            <div className="flex items-center gap-2 ml-3 pl-3 border-l border-slate-200">
+            <div className="flex items-center gap-1 ml-2">
               <a
                 href="https://wa.me/8615325467680"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center transition-colors shadow-md"
+                className="w-8 h-8 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center transition-all hover:scale-110"
                 title="WhatsApp"
                 data-testid="header-whatsapp"
               >
-                <SiWhatsapp size={18} />
+                <SiWhatsapp size={15} />
               </a>
               <div className="group relative">
                 <button
-                  className="w-9 h-9 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center transition-colors shadow-md"
+                  className="w-8 h-8 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center transition-all hover:scale-110"
                   title="WeChat: Voguishgirl"
                   data-testid="header-wechat"
                 >
-                  <SiWechat size={18} />
+                  <SiWechat size={15} />
                 </button>
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-2 bg-slate-800 text-white rounded-lg shadow-xl text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
                   WeChat ID: <span className="font-bold">Voguishgirl</span>
@@ -1178,11 +1178,11 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
                 href="https://www.tiktok.com/@guangzhouinterpreter"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-900 text-white flex items-center justify-center transition-colors shadow-md"
+                className="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-800 text-white flex items-center justify-center transition-all hover:scale-110"
                 title="TikTok"
                 data-testid="header-tiktok"
               >
-                <SiTiktok size={16} />
+                <SiTiktok size={14} />
               </a>
             </div>
           </div>
