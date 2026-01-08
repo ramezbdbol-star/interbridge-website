@@ -992,7 +992,7 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
   toggleMenu: () => void;
 }) {
   const { isEditMode } = useContent();
-  const [showServicesDropdown, setShowServicesDropdown] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [expandedMobileCategory, setExpandedMobileCategory] = useState<string | null>(null);
   
   return (
@@ -1025,82 +1025,112 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
             </div>
           </div>
           
-          <div className="hidden lg:flex items-center gap-1">
-            {/* Individual Service Category Buttons */}
-            <button
-              onClick={() => scrollToSection('services')}
-              className="text-slate-700 hover:text-blue-700 font-medium transition-colors px-3 py-2 flex items-center gap-1.5 text-sm group"
-              data-testid="nav-sourcing"
-            >
-              <Search size={16} className="text-blue-500" />
-              Sourcing
-            </button>
-            <button
-              onClick={() => scrollToSection('services')}
-              className="text-slate-700 hover:text-blue-700 font-medium transition-colors px-3 py-2 flex items-center gap-1.5 text-sm group"
-              data-testid="nav-quality"
-            >
-              <ShieldCheck size={16} className="text-emerald-500" />
-              Quality
-            </button>
-            <button
-              onClick={() => scrollToSection('services')}
-              className="text-slate-700 hover:text-blue-700 font-medium transition-colors px-3 py-2 flex items-center gap-1.5 text-sm group"
-              data-testid="nav-interpretation"
-            >
-              <Languages size={16} className="text-violet-500" />
-              Interpretation
-            </button>
-            <button
-              onClick={() => scrollToSection('services')}
-              className="text-slate-700 hover:text-blue-700 font-medium transition-colors px-3 py-2 flex items-center gap-1.5 text-sm group"
-              data-testid="nav-company"
-            >
-              <Building2 size={16} className="text-amber-500" />
-              Company
-            </button>
-            <button
-              onClick={() => scrollToSection('services')}
-              className="text-slate-700 hover:text-blue-700 font-medium transition-colors px-3 py-2 flex items-center gap-1.5 text-sm group"
-              data-testid="nav-experiences"
-            >
-              <MapPin size={16} className="text-rose-500" />
-              Experiences
-            </button>
+          <div className="hidden lg:flex items-center gap-0">
+            {/* Service Category Dropdowns */}
+            {serviceCategories.map((category) => {
+              const IconComponent = category.icon;
+              const isOpen = activeDropdown === category.id;
+              const colorClasses: Record<string, { bg: string; text: string; border: string }> = {
+                blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200' },
+                emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200' },
+                violet: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200' },
+                amber: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200' },
+                rose: { bg: 'bg-rose-50', text: 'text-rose-600', border: 'border-rose-200' },
+              };
+              const colors = colorClasses[category.color];
+              
+              return (
+                <div
+                  key={category.id}
+                  className="relative"
+                  onMouseEnter={() => setActiveDropdown(category.id)}
+                  onMouseLeave={() => setActiveDropdown(null)}
+                >
+                  <button
+                    onClick={() => scrollToSection('services')}
+                    className={`font-medium transition-colors px-3 py-2 flex items-center gap-1.5 text-sm ${isOpen ? 'text-blue-700' : 'text-slate-700 hover:text-blue-700'}`}
+                    data-testid={`nav-${category.id}`}
+                  >
+                    <IconComponent size={16} className={colors.text} />
+                    {category.title.split(' ')[0]}
+                    <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {isOpen && (
+                    <div className="absolute top-full left-0 pt-2 w-[280px] z-50">
+                      <div className={`bg-white rounded-xl shadow-2xl border ${colors.border} overflow-hidden`}>
+                        <div className={`${colors.bg} px-4 py-3 border-b ${colors.border}`}>
+                          <div className="flex items-center gap-2">
+                            <IconComponent size={20} className={colors.text} />
+                            <h4 className={`font-bold ${colors.text}`}>{category.title}</h4>
+                          </div>
+                        </div>
+                        <div className="p-2">
+                          {category.subServices.map((service, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => {
+                                scrollToSection('services');
+                                setActiveDropdown(null);
+                              }}
+                              className="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 hover:text-blue-700 text-sm flex items-center gap-2 transition-colors"
+                            >
+                              <CheckCircle2 size={14} className={colors.text} />
+                              {service}
+                            </button>
+                          ))}
+                        </div>
+                        <div className={`${colors.bg} px-4 py-2 border-t ${colors.border}`}>
+                          <button 
+                            onClick={() => {
+                              scrollToSection('services');
+                              setActiveDropdown(null);
+                            }}
+                            className={`${colors.text} font-medium text-sm hover:underline flex items-center gap-1`}
+                          >
+                            View All Services <ArrowRight size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
             {/* More Menu - combines For You, Process, FAQ */}
             <div 
               className="relative"
-              onMouseEnter={() => setShowServicesDropdown(true)}
-              onMouseLeave={() => setShowServicesDropdown(false)}
+              onMouseEnter={() => setActiveDropdown('more')}
+              onMouseLeave={() => setActiveDropdown(null)}
             >
               <button 
-                className="text-slate-500 hover:text-blue-700 font-medium transition-colors px-3 py-2 flex items-center gap-1 text-sm"
+                className={`font-medium transition-colors px-3 py-2 flex items-center gap-1 text-sm ${activeDropdown === 'more' ? 'text-blue-700' : 'text-slate-500 hover:text-blue-700'}`}
                 data-testid="nav-more-dropdown"
               >
                 More
-                <ChevronDown className={`w-4 h-4 transition-transform ${showServicesDropdown ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3 h-3 transition-transform ${activeDropdown === 'more' ? 'rotate-180' : ''}`} />
               </button>
               
-              {showServicesDropdown && (
-                <div className="absolute top-full right-0 pt-2 w-[200px]">
+              {activeDropdown === 'more' && (
+                <div className="absolute top-full right-0 pt-2 w-[200px] z-50">
                   <div className="bg-white rounded-xl shadow-2xl border border-slate-200 p-2">
                     <button 
-                      onClick={() => { scrollToSection('buyers'); setShowServicesDropdown(false); }}
+                      onClick={() => { scrollToSection('buyers'); setActiveDropdown(null); }}
                       className="w-full text-left px-4 py-2.5 rounded-lg text-slate-700 hover:bg-slate-50 hover:text-blue-700 font-medium text-sm flex items-center gap-2"
                     >
                       <Users size={16} className="text-slate-400" />
                       For You
                     </button>
                     <button 
-                      onClick={() => { scrollToSection('process'); setShowServicesDropdown(false); }}
+                      onClick={() => { scrollToSection('process'); setActiveDropdown(null); }}
                       className="w-full text-left px-4 py-2.5 rounded-lg text-slate-700 hover:bg-slate-50 hover:text-blue-700 font-medium text-sm flex items-center gap-2"
                     >
                       <LayoutList size={16} className="text-slate-400" />
                       Our Process
                     </button>
                     <button 
-                      onClick={() => { scrollToSection('faq'); setShowServicesDropdown(false); }}
+                      onClick={() => { scrollToSection('faq'); setActiveDropdown(null); }}
                       className="w-full text-left px-4 py-2.5 rounded-lg text-slate-700 hover:bg-slate-50 hover:text-blue-700 font-medium text-sm flex items-center gap-2"
                     >
                       <HelpCircle size={16} className="text-slate-400" />
