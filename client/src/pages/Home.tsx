@@ -39,6 +39,7 @@ import {
   LogOut,
   Loader2,
   CheckCircle,
+  CheckCircle2,
   Send,
   Eye,
   EyeOff,
@@ -50,7 +51,8 @@ import {
   Grid3X3,
   MessageSquare,
   Image,
-  Megaphone
+  Megaphone,
+  Building2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -1172,70 +1174,253 @@ function HeroSection({ scrollToSection }: { scrollToSection: (id: string) => voi
 }
 
 function ServicesSection() {
-  const { isEditMode, isSectionVisible, isElementVisible } = useContent();
+  const { isEditMode, isSectionVisible } = useContent();
   const visible = isSectionVisible('services');
+  const [expandedCategory, setExpandedCategory] = useState<number | null>(null);
 
-  const services = [
-    { id: 'service-1', icon: <Search size={28} />, color: 'blue' },
-    { id: 'service-2', icon: <Factory size={28} />, color: 'amber' },
-    { id: 'service-3', icon: <Languages size={28} />, color: 'green' },
-    { id: 'service-4', icon: <ShieldCheck size={28} />, color: 'purple' },
-  ];
-
-  const defaultServices = [
-    { title: 'Sourcing & Screening', desc: 'We identify, vet, and compare multiple factories. Get transparent quotes and factory profiles tailored to your product needs.' },
-    { title: 'OEM/ODM Development', desc: 'From concept to production, we manage the entire product development cycle with trusted manufacturing partners.' },
-    { title: 'Interpretation & Factory Visits', desc: 'Travel with confidence. We provide on-ground translation and accompany you during factory tours and negotiations.' },
-    { title: 'Quality Control', desc: 'Pre-shipment inspections, production monitoring, and defect reporting to ensure your order meets specifications.' },
+  const serviceCategories = [
+    { 
+      id: 'cat-sourcing', 
+      icon: <Search size={32} />, 
+      gradient: 'from-blue-500 to-blue-700',
+      bgLight: 'bg-blue-50',
+      textColor: 'text-blue-600',
+      borderColor: 'border-blue-200',
+      title: 'Sourcing & Trade',
+      desc: 'Find reliable factories and get the best deals, from samples to bulk orders.',
+      subServices: [
+        'Product Sourcing - Finding factories & suppliers',
+        'Factory Matching - Verified manufacturers',
+        'Sample Procurement - Order & ship samples',
+        'Supplier Verification - Background checks',
+        'Price Negotiation - Best factory-direct prices',
+        'OEM/ODM Solutions - Custom manufacturing',
+        'Bulk Order Management - Large-scale purchases'
+      ]
+    },
+    { 
+      id: 'cat-quality', 
+      icon: <ShieldCheck size={32} />, 
+      gradient: 'from-emerald-500 to-emerald-700',
+      bgLight: 'bg-emerald-50',
+      textColor: 'text-emerald-600',
+      borderColor: 'border-emerald-200',
+      title: 'Quality & Inspection',
+      desc: 'Protect your investment with thorough quality checks at every stage.',
+      subServices: [
+        'Factory Audits - On-site assessments',
+        'Pre-Production Inspection - Material checks',
+        'During Production (DUPRO) - Mid-production QC',
+        'Pre-Shipment Inspection (PSI) - Final verification',
+        'Product Testing & Certification - Lab testing',
+        'Defect Analysis & Reporting - Documentation'
+      ]
+    },
+    { 
+      id: 'cat-interpretation', 
+      icon: <Languages size={32} />, 
+      gradient: 'from-violet-500 to-violet-700',
+      bgLight: 'bg-violet-50',
+      textColor: 'text-violet-600',
+      borderColor: 'border-violet-200',
+      title: 'Interpretation & Support',
+      desc: 'Bridge the language gap with professional bilingual assistance.',
+      subServices: [
+        'Factory Visit Interpretation - On-site translators',
+        'Trade Fair Accompaniment - Canton Fair, Yiwu Fair',
+        'Business Meeting Translation - Live interpretation',
+        'Document Translation - Contracts, specs, invoices',
+        'Video Call Interpretation - Remote translation',
+        'Cultural Business Consulting - Chinese etiquette'
+      ]
+    },
+    { 
+      id: 'cat-company', 
+      icon: <Building2 size={32} />, 
+      gradient: 'from-amber-500 to-amber-700',
+      bgLight: 'bg-amber-50',
+      textColor: 'text-amber-600',
+      borderColor: 'border-amber-200',
+      title: 'Company Registration',
+      desc: 'Set up your business in China with expert guidance and full support.',
+      subServices: [
+        'WFOE Registration - Foreign-Owned Enterprise',
+        'Business License Application - Permits & licenses',
+        'Corporate Bank Account - Chinese & offshore',
+        'Work Visa & Residence Permit - Z-visa processing',
+        'Registered Address Service - Guangzhou/Shenzhen',
+        'Annual Compliance & Accounting - Tax filing'
+      ]
+    },
+    { 
+      id: 'cat-experiences', 
+      icon: <MapPin size={32} />, 
+      gradient: 'from-rose-500 to-rose-700',
+      bgLight: 'bg-rose-50',
+      textColor: 'text-rose-600',
+      borderColor: 'border-rose-200',
+      title: 'Guangdong Experiences',
+      desc: 'Discover the region with curated tours, markets, and local insights.',
+      subServices: [
+        'Guangzhou City Tours - Historic sites & food',
+        'Shenzhen Tech Tours - Electronics & innovation',
+        'Premium Shopping - High-end malls & wholesale',
+        'Underground Market Adventures - Exclusive access',
+        'Cantonese Food & Culture - Dim sum trails',
+        'Factory Town Visits - Dongguan, Foshan',
+        'Canton Fair VIP Assistance - Full support',
+        'Custom Itinerary Planning - Business + leisure'
+      ]
+    },
   ];
 
   return (
     <EditableSection id="services" name="Services">
-      <section id="services" className={`py-24 bg-white ${!visible && isEditMode ? 'opacity-40' : ''}`}>
+      <section id="services" className={`py-24 bg-gradient-to-b from-white to-slate-50 ${!visible && isEditMode ? 'opacity-40' : ''}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <EditableText
               id="services-badge"
-              defaultText="What We Do"
+              defaultText="Our Services"
               className="text-blue-700 font-bold uppercase tracking-widest text-sm"
               element="span"
             />
             <EditableText
               id="services-title"
-              defaultText="End-to-End Import Solutions"
+              defaultText="Everything You Need to Succeed in China"
               element="h2"
               className="text-4xl font-extrabold text-slate-900 mt-4"
             />
             <EditableText
               id="services-subtitle"
-              defaultText="From factory discovery to delivered goods, we handle every step of your China sourcing journey."
+              defaultText="From sourcing products to setting up your company, we're your complete partner for doing business in China."
               element="p"
-              className="text-slate-600 text-lg mt-4 max-w-2xl mx-auto"
+              className="text-slate-600 text-lg mt-4 max-w-3xl mx-auto"
             />
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {services.map((service, i) => (
-              <EditableContainer key={service.id} id={service.id} label={`Service ${i + 1}`}>
-                <div className="bg-slate-50 rounded-2xl p-8 hover:shadow-xl transition-all duration-300 border border-slate-100 group h-full">
-                  <div className={`bg-${service.color}-100 w-16 h-16 rounded-xl flex items-center justify-center text-${service.color}-600 mb-6 group-hover:scale-110 transition-transform`}>
-                    {service.icon}
+          {/* Main 5 Category Cards */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {serviceCategories.slice(0, 3).map((category, i) => (
+              <EditableContainer key={category.id} id={category.id} label={category.title}>
+                <div 
+                  className={`relative rounded-2xl p-6 transition-all duration-300 cursor-pointer group h-full border-2 ${
+                    expandedCategory === i 
+                      ? `${category.borderColor} shadow-xl` 
+                      : 'border-transparent hover:border-slate-200 hover:shadow-lg'
+                  } bg-white`}
+                  onClick={() => setExpandedCategory(expandedCategory === i ? null : i)}
+                  data-testid={`category-card-${i}`}
+                >
+                  <div className={`absolute top-0 left-0 right-0 h-2 rounded-t-2xl bg-gradient-to-r ${category.gradient}`} />
+                  
+                  <div className="flex items-start gap-4 mt-2">
+                    <div className={`${category.bgLight} w-14 h-14 rounded-xl flex items-center justify-center ${category.textColor} flex-shrink-0 group-hover:scale-110 transition-transform`}>
+                      {category.icon}
+                    </div>
+                    <div className="flex-1">
+                      <EditableText
+                        id={`${category.id}-title`}
+                        defaultText={category.title}
+                        element="h3"
+                        className="text-xl font-bold text-slate-900 mb-1"
+                      />
+                      <EditableText
+                        id={`${category.id}-desc`}
+                        defaultText={category.desc}
+                        element="p"
+                        className="text-slate-600 text-sm leading-relaxed"
+                      />
+                    </div>
+                    <ChevronDown 
+                      className={`w-5 h-5 text-slate-400 transition-transform flex-shrink-0 ${expandedCategory === i ? 'rotate-180' : ''}`} 
+                    />
                   </div>
-                  <EditableText
-                    id={`${service.id}-title`}
-                    defaultText={defaultServices[i].title}
-                    element="h3"
-                    className="text-xl font-bold text-slate-900 mb-3"
-                  />
-                  <EditableText
-                    id={`${service.id}-desc`}
-                    defaultText={defaultServices[i].desc}
-                    element="p"
-                    className="text-slate-600 leading-relaxed"
-                  />
+
+                  {expandedCategory === i && (
+                    <div className="mt-4 pt-4 border-t border-slate-100">
+                      <ul className="space-y-2">
+                        {category.subServices.map((service, j) => (
+                          <li key={j} className="flex items-start gap-2 text-sm text-slate-600">
+                            <CheckCircle2 className={`w-4 h-4 ${category.textColor} flex-shrink-0 mt-0.5`} />
+                            <span>{service}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </EditableContainer>
             ))}
+          </div>
+
+          {/* Bottom 2 Category Cards */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {serviceCategories.slice(3, 5).map((category, idx) => {
+              const i = idx + 3;
+              return (
+                <EditableContainer key={category.id} id={category.id} label={category.title}>
+                  <div 
+                    className={`relative rounded-2xl p-6 transition-all duration-300 cursor-pointer group h-full border-2 ${
+                      expandedCategory === i 
+                        ? `${category.borderColor} shadow-xl` 
+                        : 'border-transparent hover:border-slate-200 hover:shadow-lg'
+                    } bg-white`}
+                    onClick={() => setExpandedCategory(expandedCategory === i ? null : i)}
+                    data-testid={`category-card-${i}`}
+                  >
+                    <div className={`absolute top-0 left-0 right-0 h-2 rounded-t-2xl bg-gradient-to-r ${category.gradient}`} />
+                    
+                    <div className="flex items-start gap-4 mt-2">
+                      <div className={`${category.bgLight} w-14 h-14 rounded-xl flex items-center justify-center ${category.textColor} flex-shrink-0 group-hover:scale-110 transition-transform`}>
+                        {category.icon}
+                      </div>
+                      <div className="flex-1">
+                        <EditableText
+                          id={`${category.id}-title`}
+                          defaultText={category.title}
+                          element="h3"
+                          className="text-xl font-bold text-slate-900 mb-1"
+                        />
+                        <EditableText
+                          id={`${category.id}-desc`}
+                          defaultText={category.desc}
+                          element="p"
+                          className="text-slate-600 text-sm leading-relaxed"
+                        />
+                      </div>
+                      <ChevronDown 
+                        className={`w-5 h-5 text-slate-400 transition-transform flex-shrink-0 ${expandedCategory === i ? 'rotate-180' : ''}`} 
+                      />
+                    </div>
+
+                    {expandedCategory === i && (
+                      <div className="mt-4 pt-4 border-t border-slate-100">
+                        <ul className="space-y-2">
+                          {category.subServices.map((service, j) => (
+                            <li key={j} className="flex items-start gap-2 text-sm text-slate-600">
+                              <CheckCircle2 className={`w-4 h-4 ${category.textColor} flex-shrink-0 mt-0.5`} />
+                              <span>{service}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </EditableContainer>
+              );
+            })}
+          </div>
+
+          {/* CTA */}
+          <div className="text-center mt-12">
+            <EditableButton
+              id="services-cta"
+              defaultText="Let's Discuss Your Needs"
+              defaultLink="#contact"
+              className="bg-blue-900 text-white px-8 py-4 rounded-lg font-bold hover:bg-blue-800 transition-colors inline-flex items-center shadow-lg hover:shadow-xl"
+              icon={<ArrowRight className="ml-2" size={20} />}
+            />
           </div>
         </div>
       </section>
