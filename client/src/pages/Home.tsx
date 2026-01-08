@@ -1025,23 +1025,48 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
             </div>
           </div>
           
-          <div className="hidden lg:flex items-center gap-0">
+          <div className="hidden lg:flex items-center gap-1">
             {/* Individual Service Category Buttons */}
-            {serviceCategories.map((category) => {
-              const IconComponent = category.icon;
-              return (
-                <button
-                  key={category.id}
-                  onClick={() => scrollToSection('services')}
-                  className="text-slate-600 hover:text-blue-700 font-medium transition-colors px-2.5 py-2 flex items-center gap-1.5 text-sm group"
-                  data-testid={`nav-${category.id}`}
-                >
-                  <IconComponent size={16} className={`text-${category.color}-500 group-hover:scale-110 transition-transform`} />
-                  <span className="hidden xl:inline">{category.title.split(' ')[0]}</span>
-                  <span className="xl:hidden">{category.title.split(' ')[0].slice(0, 4)}</span>
-                </button>
-              );
-            })}
+            <button
+              onClick={() => scrollToSection('services')}
+              className="text-slate-700 hover:text-blue-700 font-medium transition-colors px-3 py-2 flex items-center gap-1.5 text-sm group"
+              data-testid="nav-sourcing"
+            >
+              <Search size={16} className="text-blue-500" />
+              Sourcing
+            </button>
+            <button
+              onClick={() => scrollToSection('services')}
+              className="text-slate-700 hover:text-blue-700 font-medium transition-colors px-3 py-2 flex items-center gap-1.5 text-sm group"
+              data-testid="nav-quality"
+            >
+              <ShieldCheck size={16} className="text-emerald-500" />
+              Quality
+            </button>
+            <button
+              onClick={() => scrollToSection('services')}
+              className="text-slate-700 hover:text-blue-700 font-medium transition-colors px-3 py-2 flex items-center gap-1.5 text-sm group"
+              data-testid="nav-interpretation"
+            >
+              <Languages size={16} className="text-violet-500" />
+              Interpretation
+            </button>
+            <button
+              onClick={() => scrollToSection('services')}
+              className="text-slate-700 hover:text-blue-700 font-medium transition-colors px-3 py-2 flex items-center gap-1.5 text-sm group"
+              data-testid="nav-company"
+            >
+              <Building2 size={16} className="text-amber-500" />
+              Company
+            </button>
+            <button
+              onClick={() => scrollToSection('services')}
+              className="text-slate-700 hover:text-blue-700 font-medium transition-colors px-3 py-2 flex items-center gap-1.5 text-sm group"
+              data-testid="nav-experiences"
+            >
+              <MapPin size={16} className="text-rose-500" />
+              Experiences
+            </button>
 
             {/* More Menu - combines For You, Process, FAQ */}
             <div 
