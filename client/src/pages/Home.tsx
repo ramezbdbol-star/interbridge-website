@@ -1327,25 +1327,25 @@ function HeroSection({ scrollToSection }: { scrollToSection: (id: string) => voi
             
             <div className="hidden lg:block relative">
               <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-cyan-300 rounded-2xl blur opacity-30"></div>
-              <div className="relative bg-slate-800/80 backdrop-blur-xl border border-slate-700 p-8 rounded-2xl shadow-2xl">
-                <div className="space-y-6">
-                  <EditableContainer id="hero-card-1" label="Feature 1">
-                    <div className="flex items-start space-x-4">
-                      <div className="bg-blue-500/20 p-3 rounded-lg text-blue-300">
-                        <Factory size={32} />
+              <div className="relative bg-slate-800/80 backdrop-blur-xl border border-slate-700 p-6 rounded-2xl shadow-2xl">
+                <div className="space-y-4">
+                  <EditableContainer id="hero-card-1" label="Sourcing & Trade">
+                    <div className="flex items-start space-x-3">
+                      <div className="bg-blue-500/20 p-2.5 rounded-lg text-blue-300">
+                        <Search size={24} />
                       </div>
                       <div>
                         <EditableText
                           id="hero-card-1-title"
-                          defaultText="Factory Screening"
+                          defaultText="Sourcing & Trade"
                           element="h3"
-                          className="text-xl font-bold text-white"
+                          className="text-lg font-bold text-white"
                         />
                         <EditableText
                           id="hero-card-1-desc"
-                          defaultText="Background checks, capacity verification, and direct price comparison."
+                          defaultText="Factory matching, samples, bulk orders & OEM solutions."
                           element="p"
-                          className="text-slate-300 text-sm mt-1"
+                          className="text-slate-300 text-xs mt-0.5"
                         />
                       </div>
                     </div>
@@ -1353,23 +1353,23 @@ function HeroSection({ scrollToSection }: { scrollToSection: (id: string) => voi
                   
                   <div className="w-full h-px bg-slate-700"></div>
                   
-                  <EditableContainer id="hero-card-2" label="Feature 2">
-                    <div className="flex items-start space-x-4">
-                      <div className="bg-amber-500/20 p-3 rounded-lg text-amber-300">
-                        <Languages size={32} />
+                  <EditableContainer id="hero-card-2" label="Quality & Inspection">
+                    <div className="flex items-start space-x-3">
+                      <div className="bg-emerald-500/20 p-2.5 rounded-lg text-emerald-300">
+                        <ShieldCheck size={24} />
                       </div>
                       <div>
                         <EditableText
                           id="hero-card-2-title"
-                          defaultText="Bilingual Negotiation"
+                          defaultText="Quality & Inspection"
                           element="h3"
-                          className="text-xl font-bold text-white"
+                          className="text-lg font-bold text-white"
                         />
                         <EditableText
                           id="hero-card-2-desc"
-                          defaultText="Native-level Mandarin and English for confident deal-making."
+                          defaultText="Factory audits, pre-shipment inspections & certifications."
                           element="p"
-                          className="text-slate-300 text-sm mt-1"
+                          className="text-slate-300 text-xs mt-0.5"
                         />
                       </div>
                     </div>
@@ -1377,23 +1377,71 @@ function HeroSection({ scrollToSection }: { scrollToSection: (id: string) => voi
                   
                   <div className="w-full h-px bg-slate-700"></div>
                   
-                  <EditableContainer id="hero-card-3" label="Feature 3">
-                    <div className="flex items-start space-x-4">
-                      <div className="bg-green-500/20 p-3 rounded-lg text-green-300">
-                        <ShieldCheck size={32} />
+                  <EditableContainer id="hero-card-3" label="Interpretation & Support">
+                    <div className="flex items-start space-x-3">
+                      <div className="bg-violet-500/20 p-2.5 rounded-lg text-violet-300">
+                        <Languages size={24} />
                       </div>
                       <div>
                         <EditableText
                           id="hero-card-3-title"
-                          defaultText="Quality Assurance"
+                          defaultText="Interpretation & Support"
                           element="h3"
-                          className="text-xl font-bold text-white"
+                          className="text-lg font-bold text-white"
                         />
                         <EditableText
                           id="hero-card-3-desc"
-                          defaultText="On-site inspections before shipment to protect your investment."
+                          defaultText="Bilingual negotiation, market visits & travel assistance."
                           element="p"
-                          className="text-slate-300 text-sm mt-1"
+                          className="text-slate-300 text-xs mt-0.5"
+                        />
+                      </div>
+                    </div>
+                  </EditableContainer>
+                  
+                  <div className="w-full h-px bg-slate-700"></div>
+                  
+                  <EditableContainer id="hero-card-4" label="Company Registration">
+                    <div className="flex items-start space-x-3">
+                      <div className="bg-amber-500/20 p-2.5 rounded-lg text-amber-300">
+                        <Building2 size={24} />
+                      </div>
+                      <div>
+                        <EditableText
+                          id="hero-card-4-title"
+                          defaultText="Company Registration"
+                          element="h3"
+                          className="text-lg font-bold text-white"
+                        />
+                        <EditableText
+                          id="hero-card-4-desc"
+                          defaultText="WFOE setup, licensing & business consulting in China."
+                          element="p"
+                          className="text-slate-300 text-xs mt-0.5"
+                        />
+                      </div>
+                    </div>
+                  </EditableContainer>
+                  
+                  <div className="w-full h-px bg-slate-700"></div>
+                  
+                  <EditableContainer id="hero-card-5" label="Guangdong Experiences">
+                    <div className="flex items-start space-x-3">
+                      <div className="bg-rose-500/20 p-2.5 rounded-lg text-rose-300">
+                        <MapPin size={24} />
+                      </div>
+                      <div>
+                        <EditableText
+                          id="hero-card-5-title"
+                          defaultText="Guangdong Experiences"
+                          element="h3"
+                          className="text-lg font-bold text-white"
+                        />
+                        <EditableText
+                          id="hero-card-5-desc"
+                          defaultText="Market tours, cultural experiences & local recommendations."
+                          element="p"
+                          className="text-slate-300 text-xs mt-0.5"
                         />
                       </div>
                     </div>
