@@ -55,6 +55,7 @@ import {
   Building2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { SiWhatsapp, SiWechat, SiTiktok } from 'react-icons/si';
 
 interface ContactFormData {
   firstName: string;
@@ -2005,6 +2006,51 @@ function ContactSection() {
                     </div>
                   </div>
                 </EditableContainer>
+
+                {/* Social Contact Options */}
+                <div className="pt-6 mt-6 border-t border-slate-700">
+                  <div className="text-sm text-slate-400 mb-4">Connect With Us</div>
+                  <div className="flex flex-wrap gap-3">
+                    {/* WhatsApp */}
+                    <a
+                      href="https://wa.me/8615325467680"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-semibold transition-colors"
+                      data-testid="link-whatsapp"
+                    >
+                      <SiWhatsapp size={20} />
+                      WhatsApp
+                    </a>
+                    
+                    {/* WeChat */}
+                    <div className="group relative">
+                      <button
+                        className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-lg font-semibold transition-colors"
+                        data-testid="button-wechat"
+                      >
+                        <SiWechat size={20} />
+                        WeChat
+                      </button>
+                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-white text-slate-800 rounded-lg shadow-xl text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                        WeChat ID: <span className="font-bold">Voguishgirl</span>
+                        <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-white"></div>
+                      </div>
+                    </div>
+                    
+                    {/* TikTok */}
+                    <a
+                      href="https://www.tiktok.com/@guangzhouinterpreter"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-3 rounded-lg font-semibold transition-colors border border-slate-600"
+                      data-testid="link-tiktok"
+                    >
+                      <SiTiktok size={20} />
+                      TikTok
+                    </a>
+                  </div>
+                </div>
               </div>
             </div>
 
