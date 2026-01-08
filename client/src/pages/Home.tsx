@@ -1025,7 +1025,7 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
             </div>
           </div>
           
-          <div className="hidden lg:flex items-center gap-0">
+          <div className="hidden lg:flex items-center gap-1">
             {/* Service Category Dropdowns */}
             {serviceCategories.map((category) => {
               const IconComponent = category.icon;
@@ -1048,24 +1048,24 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
                 >
                   <button
                     onClick={() => scrollToSection('services')}
-                    className={`font-medium transition-colors px-3 py-2 flex items-center gap-1.5 text-sm ${isOpen ? 'text-blue-700' : 'text-slate-700 hover:text-blue-700'}`}
+                    className={`font-bold transition-colors px-4 py-3 flex items-center gap-2 text-base ${isOpen ? 'text-blue-700' : 'text-slate-800 hover:text-blue-700'}`}
                     data-testid={`nav-${category.id}`}
                   >
-                    <IconComponent size={16} className={colors.text} />
+                    <IconComponent size={20} className={colors.text} />
                     {category.title.split(' ')[0]}
-                    <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                   </button>
                   
                   {isOpen && (
-                    <div className="absolute top-full left-0 pt-2 w-[280px] z-50">
-                      <div className={`bg-white rounded-xl shadow-2xl border ${colors.border} overflow-hidden`}>
-                        <div className={`${colors.bg} px-4 py-3 border-b ${colors.border}`}>
-                          <div className="flex items-center gap-2">
-                            <IconComponent size={20} className={colors.text} />
-                            <h4 className={`font-bold ${colors.text}`}>{category.title}</h4>
+                    <div className="absolute top-full left-0 pt-2 w-[320px] z-50">
+                      <div className={`bg-white rounded-xl shadow-2xl border-2 ${colors.border} overflow-hidden`}>
+                        <div className={`${colors.bg} px-5 py-4 border-b-2 ${colors.border}`}>
+                          <div className="flex items-center gap-3">
+                            <IconComponent size={24} className={colors.text} />
+                            <h4 className={`font-bold text-lg ${colors.text}`}>{category.title}</h4>
                           </div>
                         </div>
-                        <div className="p-2">
+                        <div className="p-3">
                           {category.subServices.map((service, idx) => (
                             <button
                               key={idx}
@@ -1073,22 +1073,22 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
                                 scrollToSection('services');
                                 setActiveDropdown(null);
                               }}
-                              className="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 hover:text-blue-700 text-sm flex items-center gap-2 transition-colors"
+                              className="w-full text-left px-4 py-3 rounded-lg text-slate-800 hover:bg-slate-50 hover:text-blue-700 text-base font-medium flex items-center gap-3 transition-colors"
                             >
-                              <CheckCircle2 size={14} className={colors.text} />
+                              <CheckCircle2 size={18} className={colors.text} />
                               {service}
                             </button>
                           ))}
                         </div>
-                        <div className={`${colors.bg} px-4 py-2 border-t ${colors.border}`}>
+                        <div className={`${colors.bg} px-5 py-3 border-t-2 ${colors.border}`}>
                           <button 
                             onClick={() => {
                               scrollToSection('services');
                               setActiveDropdown(null);
                             }}
-                            className={`${colors.text} font-medium text-sm hover:underline flex items-center gap-1`}
+                            className={`${colors.text} font-bold text-base hover:underline flex items-center gap-2`}
                           >
-                            View All Services <ArrowRight size={12} />
+                            View All Services <ArrowRight size={16} />
                           </button>
                         </div>
                       </div>
@@ -1105,35 +1105,35 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
               onMouseLeave={() => setActiveDropdown(null)}
             >
               <button 
-                className={`font-medium transition-colors px-3 py-2 flex items-center gap-1 text-sm ${activeDropdown === 'more' ? 'text-blue-700' : 'text-slate-500 hover:text-blue-700'}`}
+                className={`font-bold transition-colors px-4 py-3 flex items-center gap-2 text-base ${activeDropdown === 'more' ? 'text-blue-700' : 'text-slate-600 hover:text-blue-700'}`}
                 data-testid="nav-more-dropdown"
               >
                 More
-                <ChevronDown className={`w-3 h-3 transition-transform ${activeDropdown === 'more' ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-4 h-4 transition-transform ${activeDropdown === 'more' ? 'rotate-180' : ''}`} />
               </button>
               
               {activeDropdown === 'more' && (
-                <div className="absolute top-full right-0 pt-2 w-[200px] z-50">
-                  <div className="bg-white rounded-xl shadow-2xl border border-slate-200 p-2">
+                <div className="absolute top-full right-0 pt-2 w-[240px] z-50">
+                  <div className="bg-white rounded-xl shadow-2xl border-2 border-slate-200 p-3">
                     <button 
                       onClick={() => { scrollToSection('buyers'); setActiveDropdown(null); }}
-                      className="w-full text-left px-4 py-2.5 rounded-lg text-slate-700 hover:bg-slate-50 hover:text-blue-700 font-medium text-sm flex items-center gap-2"
+                      className="w-full text-left px-4 py-3 rounded-lg text-slate-800 hover:bg-slate-50 hover:text-blue-700 font-bold text-base flex items-center gap-3"
                     >
-                      <Users size={16} className="text-slate-400" />
+                      <Users size={20} className="text-slate-500" />
                       For You
                     </button>
                     <button 
                       onClick={() => { scrollToSection('process'); setActiveDropdown(null); }}
-                      className="w-full text-left px-4 py-2.5 rounded-lg text-slate-700 hover:bg-slate-50 hover:text-blue-700 font-medium text-sm flex items-center gap-2"
+                      className="w-full text-left px-4 py-3 rounded-lg text-slate-800 hover:bg-slate-50 hover:text-blue-700 font-bold text-base flex items-center gap-3"
                     >
-                      <LayoutList size={16} className="text-slate-400" />
+                      <LayoutList size={20} className="text-slate-500" />
                       Our Process
                     </button>
                     <button 
                       onClick={() => { scrollToSection('faq'); setActiveDropdown(null); }}
-                      className="w-full text-left px-4 py-2.5 rounded-lg text-slate-700 hover:bg-slate-50 hover:text-blue-700 font-medium text-sm flex items-center gap-2"
+                      className="w-full text-left px-4 py-3 rounded-lg text-slate-800 hover:bg-slate-50 hover:text-blue-700 font-bold text-base flex items-center gap-3"
                     >
-                      <HelpCircle size={16} className="text-slate-400" />
+                      <HelpCircle size={20} className="text-slate-500" />
                       FAQ & Pricing
                     </button>
                   </div>
