@@ -1148,6 +1148,43 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
               defaultLink="#contact"
               className="bg-blue-900 text-white px-5 py-2 rounded-full font-medium hover:bg-blue-800 transition-all shadow-lg hover:shadow-blue-900/20 ml-2 text-sm"
             />
+
+            {/* Social Icons */}
+            <div className="flex items-center gap-2 ml-3 pl-3 border-l border-slate-200">
+              <a
+                href="https://wa.me/8615325467680"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center transition-colors shadow-md"
+                title="WhatsApp"
+                data-testid="header-whatsapp"
+              >
+                <SiWhatsapp size={18} />
+              </a>
+              <div className="group relative">
+                <button
+                  className="w-9 h-9 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center transition-colors shadow-md"
+                  title="WeChat: Voguishgirl"
+                  data-testid="header-wechat"
+                >
+                  <SiWechat size={18} />
+                </button>
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-2 bg-slate-800 text-white rounded-lg shadow-xl text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
+                  WeChat ID: <span className="font-bold">Voguishgirl</span>
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45 w-2 h-2 bg-slate-800"></div>
+                </div>
+              </div>
+              <a
+                href="https://www.tiktok.com/@guangzhouinterpreter"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-900 text-white flex items-center justify-center transition-colors shadow-md"
+                title="TikTok"
+                data-testid="header-tiktok"
+              >
+                <SiTiktok size={16} />
+              </a>
+            </div>
           </div>
 
           <div className="lg:hidden flex items-center">
