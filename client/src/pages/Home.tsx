@@ -1001,26 +1001,26 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
           <div 
-            className="flex-shrink-0 flex items-center cursor-pointer" 
+            className="flex-shrink-0 flex items-center cursor-pointer mr-4" 
             onClick={() => window.scrollTo(0,0)}
             data-testid="link-logo"
           >
             <img 
               src="/logo.png" 
               alt="InterBridge Solutions Logo" 
-              className="w-14 h-14 mr-3 object-contain"
+              className="w-11 h-11 mr-2 object-contain"
             />
             <div className="flex flex-col">
               <EditableText
                 id="brand-name"
                 defaultText="InterBridge"
-                className="font-bold text-xl tracking-tight text-slate-900 leading-none"
+                className="font-bold text-lg tracking-tight text-slate-900 leading-none"
                 element="span"
               />
               <EditableText
                 id="brand-tagline"
-                defaultText="Trans & Trade"
-                className="text-xs font-semibold text-blue-700 tracking-wider uppercase"
+                defaultText="TRANS & TRADE"
+                className="text-[10px] font-semibold text-blue-700 tracking-wider uppercase"
                 element="span"
               />
             </div>
@@ -1049,7 +1049,7 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
                 >
                   <button
                     onClick={() => scrollToSection('services')}
-                    className={`font-semibold transition-colors px-2.5 py-2 flex items-center gap-1.5 text-[15px] ${isOpen ? 'text-blue-700' : 'text-slate-800 hover:text-blue-700'}`}
+                    className={`font-semibold transition-colors px-1.5 py-2 flex items-center gap-1 text-[14px] ${isOpen ? 'text-blue-700' : 'text-slate-800 hover:text-blue-700'}`}
                     data-testid={`nav-${category.id}`}
                   >
                     <IconComponent size={18} className={colors.text} />
@@ -1106,7 +1106,7 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
               onMouseLeave={() => setActiveDropdown(null)}
             >
               <button 
-                className={`font-semibold transition-colors px-2.5 py-2 flex items-center gap-1.5 text-[15px] ${activeDropdown === 'more' ? 'text-blue-700' : 'text-slate-600 hover:text-blue-700'}`}
+                className={`font-semibold transition-colors px-1.5 py-2 flex items-center gap-1 text-[14px] ${activeDropdown === 'more' ? 'text-blue-700' : 'text-slate-600 hover:text-blue-700'}`}
                 data-testid="nav-more-dropdown"
               >
                 More
