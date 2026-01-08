@@ -1025,7 +1025,7 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
             </div>
           </div>
           
-          <div className="hidden lg:flex items-center gap-1">
+          <div className="hidden lg:flex items-center gap-0">
             {/* Service Category Dropdowns */}
             {serviceCategories.map((category) => {
               const IconComponent = category.icon;
@@ -1048,12 +1048,12 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
                 >
                   <button
                     onClick={() => scrollToSection('services')}
-                    className={`font-bold transition-colors px-4 py-3 flex items-center gap-2 text-base ${isOpen ? 'text-blue-700' : 'text-slate-800 hover:text-blue-700'}`}
+                    className={`font-semibold transition-colors px-2.5 py-2 flex items-center gap-1.5 text-[15px] ${isOpen ? 'text-blue-700' : 'text-slate-800 hover:text-blue-700'}`}
                     data-testid={`nav-${category.id}`}
                   >
-                    <IconComponent size={20} className={colors.text} />
+                    <IconComponent size={18} className={colors.text} />
                     {category.title.split(' ')[0]}
-                    <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                   </button>
                   
                   {isOpen && (
@@ -1105,11 +1105,11 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
               onMouseLeave={() => setActiveDropdown(null)}
             >
               <button 
-                className={`font-bold transition-colors px-4 py-3 flex items-center gap-2 text-base ${activeDropdown === 'more' ? 'text-blue-700' : 'text-slate-600 hover:text-blue-700'}`}
+                className={`font-semibold transition-colors px-2.5 py-2 flex items-center gap-1.5 text-[15px] ${activeDropdown === 'more' ? 'text-blue-700' : 'text-slate-600 hover:text-blue-700'}`}
                 data-testid="nav-more-dropdown"
               >
                 More
-                <ChevronDown className={`w-4 h-4 transition-transform ${activeDropdown === 'more' ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${activeDropdown === 'more' ? 'rotate-180' : ''}`} />
               </button>
               
               {activeDropdown === 'more' && (
