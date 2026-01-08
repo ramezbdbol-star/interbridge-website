@@ -1025,91 +1025,72 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
             </div>
           </div>
           
-          <div className="hidden lg:flex items-center gap-1">
-            {/* Services Dropdown */}
+          <div className="hidden lg:flex items-center gap-0">
+            {/* Individual Service Category Buttons */}
+            {serviceCategories.map((category) => {
+              const IconComponent = category.icon;
+              return (
+                <button
+                  key={category.id}
+                  onClick={() => scrollToSection('services')}
+                  className="text-slate-600 hover:text-blue-700 font-medium transition-colors px-2.5 py-2 flex items-center gap-1.5 text-sm group"
+                  data-testid={`nav-${category.id}`}
+                >
+                  <IconComponent size={16} className={`text-${category.color}-500 group-hover:scale-110 transition-transform`} />
+                  <span className="hidden xl:inline">{category.title.split(' ')[0]}</span>
+                  <span className="xl:hidden">{category.title.split(' ')[0].slice(0, 4)}</span>
+                </button>
+              );
+            })}
+
+            {/* More Menu - combines For You, Process, FAQ */}
             <div 
               className="relative"
               onMouseEnter={() => setShowServicesDropdown(true)}
               onMouseLeave={() => setShowServicesDropdown(false)}
             >
               <button 
-                className="text-slate-600 hover:text-blue-700 font-medium transition-colors px-3 py-2 flex items-center gap-1"
-                onClick={() => scrollToSection('services')}
-                data-testid="nav-services-dropdown"
+                className="text-slate-500 hover:text-blue-700 font-medium transition-colors px-3 py-2 flex items-center gap-1 text-sm"
+                data-testid="nav-more-dropdown"
               >
-                Services
+                More
                 <ChevronDown className={`w-4 h-4 transition-transform ${showServicesDropdown ? 'rotate-180' : ''}`} />
               </button>
               
               {showServicesDropdown && (
-                <div className="absolute top-full left-0 pt-2 w-[700px]" style={{ left: '-200px' }}>
-                  <div className="bg-white rounded-xl shadow-2xl border border-slate-200 p-4 grid grid-cols-2 gap-4">
-                    {serviceCategories.map((category) => {
-                      const IconComponent = category.icon;
-                      return (
-                        <div 
-                          key={category.id}
-                          className="p-3 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer group"
-                          onClick={() => {
-                            scrollToSection('services');
-                            setShowServicesDropdown(false);
-                          }}
-                        >
-                          <div className="flex items-start gap-3">
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-${category.color}-100 text-${category.color}-600`}>
-                              <IconComponent size={20} />
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-slate-900 group-hover:text-blue-700 transition-colors">
-                                {category.title}
-                              </h4>
-                              <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                                {category.subServices.slice(0, 3).join(' • ')}...
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                    <div className="col-span-2 pt-3 border-t border-slate-100">
-                      <button 
-                        onClick={() => {
-                          scrollToSection('services');
-                          setShowServicesDropdown(false);
-                        }}
-                        className="text-blue-700 font-medium text-sm hover:text-blue-800 flex items-center gap-1"
-                      >
-                        View All Services <ArrowRight size={14} />
-                      </button>
-                    </div>
+                <div className="absolute top-full right-0 pt-2 w-[200px]">
+                  <div className="bg-white rounded-xl shadow-2xl border border-slate-200 p-2">
+                    <button 
+                      onClick={() => { scrollToSection('buyers'); setShowServicesDropdown(false); }}
+                      className="w-full text-left px-4 py-2.5 rounded-lg text-slate-700 hover:bg-slate-50 hover:text-blue-700 font-medium text-sm flex items-center gap-2"
+                    >
+                      <Users size={16} className="text-slate-400" />
+                      For You
+                    </button>
+                    <button 
+                      onClick={() => { scrollToSection('process'); setShowServicesDropdown(false); }}
+                      className="w-full text-left px-4 py-2.5 rounded-lg text-slate-700 hover:bg-slate-50 hover:text-blue-700 font-medium text-sm flex items-center gap-2"
+                    >
+                      <LayoutList size={16} className="text-slate-400" />
+                      Our Process
+                    </button>
+                    <button 
+                      onClick={() => { scrollToSection('faq'); setShowServicesDropdown(false); }}
+                      className="w-full text-left px-4 py-2.5 rounded-lg text-slate-700 hover:bg-slate-50 hover:text-blue-700 font-medium text-sm flex items-center gap-2"
+                    >
+                      <HelpCircle size={16} className="text-slate-400" />
+                      FAQ & Pricing
+                    </button>
                   </div>
                 </div>
               )}
             </div>
 
             <EditableButton
-              id="nav-buyers"
-              defaultText="For You"
-              defaultLink="#buyers"
-              className="text-slate-600 hover:text-blue-700 font-medium transition-colors px-3 py-2"
-            />
-            <EditableButton
-              id="nav-process"
-              defaultText="Process"
-              defaultLink="#process"
-              className="text-slate-600 hover:text-blue-700 font-medium transition-colors px-3 py-2"
-            />
-            <EditableButton
-              id="nav-faq"
-              defaultText="FAQ & Pricing"
-              defaultLink="#faq"
-              className="text-slate-600 hover:text-blue-700 font-medium transition-colors px-3 py-2"
-            />
-            <EditableButton
               id="nav-cta"
               defaultText="Get a Quote"
               defaultLink="#contact"
-              className="bg-blue-900 text-white px-6 py-2.5 rounded-full font-medium hover:bg-blue-800 transition-all shadow-lg hover:shadow-blue-900/20 ml-2"
+              className="bg-blue-900 text-white px-5 py-2 rounded-full font-medium hover:bg-blue-800 transition-all shadow-lg hover:shadow-blue-900/20 ml-2 text-sm"
             />
           </div>
 
