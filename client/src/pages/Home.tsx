@@ -3,7 +3,7 @@ import { useLocation } from 'wouter';
 import { useAdmin } from '@/lib/adminContext';
 import { useContent, type CustomSection } from '@/lib/contentContext';
 import { useToast } from '@/hooks/use-toast';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { 
   EditableText, 
@@ -790,6 +790,8 @@ export default function Home() {
         return <FaqSection key={sectionId} openFaq={openFaq} toggleFaq={toggleFaq} />;
       case 'stories':
         return <StoriesSection key={sectionId} />;
+      case 'reviews':
+        return <ReviewsSection key={sectionId} />;
       case 'contact':
         return <ContactSection key={sectionId} />;
       default:
@@ -1961,6 +1963,95 @@ function FaqSection({ openFaq, toggleFaq }: { openFaq: number | null; toggleFaq:
               </EditableContainer>
             ))}
           </div>
+        </div>
+      </section>
+    </EditableSection>
+  );
+}
+
+function ReviewsSection() {
+  const { isEditMode, isSectionVisible } = useContent();
+  const visible = isSectionVisible('reviews');
+
+  const { data: reviews = [], isLoading } = useQuery<any[]>({
+    queryKey: ['/api/reviews/approved'],
+  });
+
+  if (!visible && !isEditMode) return null;
+  if (isLoading) return null;
+  if (reviews.length === 0 && !isEditMode) return null;
+
+  const serviceLabels: Record<string, string> = {
+    sourcing: 'Product Sourcing',
+    quality: 'Quality Control',
+    interpretation: 'Interpretation',
+    business: 'Business Services',
+    guangdong: 'Guangdong Experiences',
+    multiple: 'Multiple Services',
+  };
+
+  return (
+    <EditableSection id="reviews" name="Customer Reviews">
+      <section id="reviews" className={`py-24 bg-gradient-to-b from-slate-50 to-white ${!visible && isEditMode ? 'opacity-40' : ''}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <span className="text-purple-600 font-bold uppercase tracking-widest text-sm">
+              Customer Reviews
+            </span>
+            <h2 className="text-4xl font-extrabold text-slate-900 mt-4">
+              What Our Clients Say
+            </h2>
+            <p className="text-slate-600 mt-4 max-w-2xl mx-auto">
+              Real feedback from businesses who have worked with us
+            </p>
+          </div>
+
+          {reviews.length === 0 ? (
+            <div className="text-center py-12 text-slate-500">
+              <MessageSquare className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+              <p>No approved reviews yet</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {reviews.slice(0, 6).map((review) => (
+                <div 
+                  key={review.id} 
+                  className="bg-white rounded-2xl p-6 shadow-lg border border-slate-100"
+                  data-testid={`review-display-${review.id}`}
+                >
+                  <div className="flex items-center gap-1 mb-4">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`w-5 h-5 ${
+                          star <= parseInt(review.rating)
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-slate-200"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-slate-600 leading-relaxed mb-4">
+                    "{review.reviewText}"
+                  </p>
+                  <div className="pt-4 border-t border-slate-100">
+                    <div className="font-bold text-slate-900">{review.customerName}</div>
+                    {review.companyName && (
+                      <div className="text-slate-500 text-sm">{review.companyName}</div>
+                    )}
+                    <div className="flex items-center gap-2 mt-2">
+                      {review.country && (
+                        <span className="text-xs text-slate-400">{review.country}</span>
+                      )}
+                      <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded">
+                        {serviceLabels[review.serviceUsed] || review.serviceUsed}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </EditableSection>
