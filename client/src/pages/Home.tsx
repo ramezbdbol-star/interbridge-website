@@ -1012,7 +1012,7 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
   };
   
   return (
-    <nav className="fixed w-full bg-white/98 backdrop-blur-lg shadow-sm z-40 transition-all duration-300">
+    <nav className="fixed w-full bg-white shadow-md z-40 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
           {/* Logo */}
@@ -1058,11 +1058,11 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
                   onMouseLeave={() => setActiveDropdown(null)}
                 >
                   <button
-                    className={`px-2.5 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-1 ${isOpen ? 'text-blue-600 bg-slate-50' : 'text-slate-700 hover:text-blue-600'}`}
+                    className={`px-3 py-2 rounded-lg font-semibold text-base transition-colors flex items-center gap-1.5 ${isOpen ? 'text-blue-600 bg-blue-50' : 'text-slate-900 hover:text-blue-600'}`}
                     data-testid={`nav-${category.id}`}
                   >
                     {category.title.split(' ')[0]}
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
                   </button>
                   
                   {/* Dropdown Panel */}
@@ -1117,24 +1117,24 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
             <div className="w-px h-5 bg-slate-200 mx-2"></div>
 
             {/* Social Icons */}
-            <div className="flex items-center gap-0.5">
+            <div className="flex items-center gap-1">
               <a
                 href="https://wa.me/8615325467680"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-8 h-8 rounded-lg text-slate-500 hover:text-green-600 hover:bg-green-50 flex items-center justify-center transition-colors"
+                className="w-9 h-9 rounded-lg text-slate-700 hover:text-green-600 hover:bg-green-50 flex items-center justify-center transition-colors"
                 title="WhatsApp: +86 153 2546 7680"
                 data-testid="header-whatsapp"
               >
-                <SiWhatsapp size={16} />
+                <SiWhatsapp size={18} />
               </a>
               <div className="group relative">
                 <button
-                  className="w-8 h-8 rounded-lg text-slate-500 hover:text-green-600 hover:bg-green-50 flex items-center justify-center transition-colors"
+                  className="w-9 h-9 rounded-lg text-slate-700 hover:text-green-600 hover:bg-green-50 flex items-center justify-center transition-colors"
                   title="WeChat: Voguishgirl"
                   data-testid="header-wechat"
                 >
-                  <SiWechat size={16} />
+                  <SiWechat size={18} />
                 </button>
                 <div className="absolute top-full right-0 mt-2 px-3 py-2 bg-slate-800 text-white rounded-lg shadow-xl text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
                   WeChat ID: <span className="text-green-400">Voguishgirl</span>
@@ -1145,11 +1145,11 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
                 href="https://www.tiktok.com/@guangzhouinterpreter"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-8 h-8 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 flex items-center justify-center transition-colors"
+                className="w-9 h-9 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 flex items-center justify-center transition-colors"
                 title="TikTok: @guangzhouinterpreter"
                 data-testid="header-tiktok"
               >
-                <SiTiktok size={14} />
+                <SiTiktok size={16} />
               </a>
             </div>
 
@@ -1158,7 +1158,7 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
               id="nav-cta"
               defaultText="Get Quote"
               defaultLink="#contact"
-              className="bg-blue-600 text-white px-5 py-2 rounded-full font-semibold hover:bg-blue-700 transition-colors shadow-sm ml-2 text-sm"
+              className="bg-blue-600 text-white px-6 py-2.5 rounded-full font-bold hover:bg-blue-700 transition-colors shadow-md ml-3 text-base"
             />
           </div>
 
