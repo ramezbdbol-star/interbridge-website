@@ -8,12 +8,14 @@ import { ContentProvider } from "./lib/contentContext";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Admin from "@/pages/Admin";
+import SubmitReview from "@/pages/SubmitReview";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home}/>
       <Route path="/admin" component={Admin}/>
+      <Route path="/submit-review" component={SubmitReview}/>
       <Route component={NotFound} />
     </Switch>
   );
