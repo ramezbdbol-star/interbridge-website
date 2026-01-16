@@ -1000,7 +1000,7 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
   toggleMenu: () => void;
 }) {
   const { isEditMode } = useContent();
-  const [showServicesMega, setShowServicesMega] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [expandedMobileCategory, setExpandedMobileCategory] = useState<string | null>(null);
   
   const colorClasses: Record<string, { bg: string; text: string; iconBg: string }> = {
@@ -1043,133 +1043,114 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
           </div>
           
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-1">
-            {/* Services Mega Menu Trigger */}
-            <div
-              className="relative"
-              onMouseEnter={() => setShowServicesMega(true)}
-              onMouseLeave={() => setShowServicesMega(false)}
-            >
-              <button
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-1.5 ${showServicesMega ? 'text-blue-600 bg-blue-50' : 'text-slate-700 hover:text-blue-600 hover:bg-slate-50'}`}
-                data-testid="nav-services"
-              >
-                Services
-                <ChevronDown className={`w-4 h-4 transition-transform ${showServicesMega ? 'rotate-180' : ''}`} />
-              </button>
+          <div className="hidden lg:flex items-center gap-0.5">
+            {/* Individual Service Category Dropdowns */}
+            {serviceCategories.map((category) => {
+              const IconComponent = category.icon;
+              const isOpen = activeDropdown === category.id;
+              const colors = colorClasses[category.color];
               
-              {/* Mega Menu */}
-              {showServicesMega && (
-                <div className="absolute top-full left-0 pt-3 z-50">
-                  <div className="bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden" style={{ width: 'min(90vw, 720px)' }}>
-                    {/* Header */}
-                    <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-5 py-3">
-                      <h3 className="text-white font-bold">Our Services</h3>
-                      <p className="text-blue-100 text-sm">Complete China sourcing & business solutions</p>
-                    </div>
-                    
-                    {/* Service Grid - 2 columns for better fit */}
-                    <div className="grid grid-cols-2 gap-1 p-3">
-                      {serviceCategories.map((category) => {
-                        const IconComponent = category.icon;
-                        const colors = colorClasses[category.color];
-                        return (
-                          <button
-                            key={category.id}
+              return (
+                <div
+                  key={category.id}
+                  className="relative"
+                  onMouseEnter={() => setActiveDropdown(category.id)}
+                  onMouseLeave={() => setActiveDropdown(null)}
+                >
+                  <button
+                    className={`px-2.5 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-1 ${isOpen ? 'text-blue-600 bg-slate-50' : 'text-slate-700 hover:text-blue-600'}`}
+                    data-testid={`nav-${category.id}`}
+                  >
+                    {category.title.split(' ')[0]}
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {/* Dropdown Panel */}
+                  {isOpen && (
+                    <div className="absolute top-full left-0 pt-2 z-50">
+                      <div className="bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden w-72">
+                        {/* Header with Icon */}
+                        <div className={`${colors.iconBg} px-4 py-3 border-b border-slate-100`}>
+                          <div className="flex items-center gap-2">
+                            <IconComponent size={18} className={colors.text} />
+                            <h4 className={`font-semibold ${colors.text}`}>{category.title}</h4>
+                          </div>
+                        </div>
+                        
+                        {/* Sub-services List */}
+                        <div className="p-2 max-h-80 overflow-y-auto">
+                          {category.subServices.map((service, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => {
+                                scrollToSection('services');
+                                setActiveDropdown(null);
+                              }}
+                              className="w-full text-left px-3 py-2 rounded-lg text-slate-700 hover:bg-slate-50 text-sm flex items-center gap-2 transition-colors"
+                            >
+                              <CheckCircle2 size={14} className={colors.text} />
+                              {service}
+                            </button>
+                          ))}
+                        </div>
+                        
+                        {/* Footer */}
+                        <div className="bg-slate-50 px-4 py-2 border-t border-slate-100">
+                          <button 
                             onClick={() => {
                               scrollToSection('services');
-                              setShowServicesMega(false);
+                              setActiveDropdown(null);
                             }}
-                            className={`p-3 rounded-lg text-left transition-colors ${colors.bg}`}
-                            data-testid={`nav-${category.id}`}
+                            className="text-blue-600 font-medium text-sm hover:text-blue-700 flex items-center gap-1"
                           >
-                            <div className="flex items-center gap-3">
-                              <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${colors.iconBg} ${colors.text}`}>
-                                <IconComponent size={18} />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h4 className="font-semibold text-slate-900 text-sm">{category.title}</h4>
-                                <p className="text-slate-500 text-xs truncate">
-                                  {category.subServices.length} services
-                                </p>
-                              </div>
-                            </div>
+                            View All <ArrowRight size={12} />
                           </button>
-                        );
-                      })}
+                        </div>
+                      </div>
                     </div>
-                    
-                    {/* Footer */}
-                    <div className="bg-slate-50 px-5 py-2.5 flex items-center justify-between border-t border-slate-100">
-                      <span className="text-slate-500 text-sm">40+ specialized services</span>
-                      <button 
-                        onClick={() => {
-                          scrollToSection('services');
-                          setShowServicesMega(false);
-                        }}
-                        className="text-blue-600 font-medium text-sm hover:text-blue-700 flex items-center gap-1"
-                      >
-                        View All <ArrowRight size={14} />
-                      </button>
-                    </div>
-                  </div>
+                  )}
                 </div>
-              )}
-            </div>
-
-            {/* Simple Nav Links */}
-            <button 
-              onClick={() => scrollToSection('process')}
-              className="px-4 py-2 rounded-lg font-medium text-sm text-slate-700 hover:text-blue-600 hover:bg-slate-50 transition-colors"
-              data-testid="nav-process"
-            >
-              How It Works
-            </button>
-            
-            <button 
-              onClick={() => scrollToSection('buyers')}
-              className="px-4 py-2 rounded-lg font-medium text-sm text-slate-700 hover:text-blue-600 hover:bg-slate-50 transition-colors"
-              data-testid="nav-about"
-            >
-              About
-            </button>
-            
-            <button 
-              onClick={() => scrollToSection('faq')}
-              className="px-4 py-2 rounded-lg font-medium text-sm text-slate-700 hover:text-blue-600 hover:bg-slate-50 transition-colors"
-              data-testid="nav-faq"
-            >
-              FAQ
-            </button>
+              );
+            })}
 
             {/* Divider */}
-            <div className="w-px h-6 bg-slate-200 mx-2"></div>
+            <div className="w-px h-5 bg-slate-200 mx-2"></div>
 
-            {/* Contact Icons - Subtle */}
-            <div className="flex items-center gap-1">
+            {/* Social Icons */}
+            <div className="flex items-center gap-0.5">
               <a
                 href="https://wa.me/8615325467680"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-9 h-9 rounded-lg text-slate-500 hover:text-green-600 hover:bg-green-50 flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-lg text-slate-500 hover:text-green-600 hover:bg-green-50 flex items-center justify-center transition-colors"
                 title="WhatsApp: +86 153 2546 7680"
                 data-testid="header-whatsapp"
               >
-                <SiWhatsapp size={18} />
+                <SiWhatsapp size={16} />
               </a>
               <div className="group relative">
                 <button
-                  className="w-9 h-9 rounded-lg text-slate-500 hover:text-green-600 hover:bg-green-50 flex items-center justify-center transition-colors"
+                  className="w-8 h-8 rounded-lg text-slate-500 hover:text-green-600 hover:bg-green-50 flex items-center justify-center transition-colors"
                   title="WeChat: Voguishgirl"
                   data-testid="header-wechat"
                 >
-                  <SiWechat size={18} />
+                  <SiWechat size={16} />
                 </button>
                 <div className="absolute top-full right-0 mt-2 px-3 py-2 bg-slate-800 text-white rounded-lg shadow-xl text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
                   WeChat ID: <span className="text-green-400">Voguishgirl</span>
                   <div className="absolute -top-1 right-4 rotate-45 w-2 h-2 bg-slate-800"></div>
                 </div>
               </div>
+              <a
+                href="https://www.tiktok.com/@guangzhouinterpreter"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 flex items-center justify-center transition-colors"
+                title="TikTok: @guangzhouinterpreter"
+                data-testid="header-tiktok"
+              >
+                <SiTiktok size={14} />
+              </a>
             </div>
 
             {/* CTA Button */}
@@ -1177,7 +1158,7 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
               id="nav-cta"
               defaultText="Get Quote"
               defaultLink="#contact"
-              className="bg-blue-600 text-white px-6 py-2.5 rounded-full font-semibold hover:bg-blue-700 transition-colors shadow-sm ml-3 text-sm"
+              className="bg-blue-600 text-white px-5 py-2 rounded-full font-semibold hover:bg-blue-700 transition-colors shadow-sm ml-2 text-sm"
             />
           </div>
 
