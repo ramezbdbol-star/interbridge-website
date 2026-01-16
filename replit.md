@@ -10,7 +10,16 @@ The application is built as a full-stack web application with an editable conten
 
 Preferred communication style: Simple, everyday language.
 
-## Recent Updates (December 14, 2025)
+## Recent Updates (January 16, 2026)
+
+**Customer Review System:**
+- Added customer review submission page at /submit-review with star ratings, service selection, and feedback form
+- Implemented moderation workflow: reviews start as "pending" and require admin approval before display
+- Admin reviews management panel with approve/reject actions and shareable review link
+- Customer Reviews section on homepage displays only approved reviews with ratings, customer details, and service badges
+- Reviews database table with status field (pending/approved/rejected) and full CRUD API routes
+
+## Previous Updates (December 14, 2025)
 
 **Enhanced CMS Features:**
 - Added flexible custom section creation with 5 templates: Text Block, Features Grid, Call-to-Action, Testimonial, Image Gallery
