@@ -959,14 +959,21 @@ const serviceCategories = [
     id: 'company',
     icon: Building2,
     color: 'amber',
-    title: 'Company Registration',
+    title: 'Business & Legal',
     subServices: [
       'WFOE Registration',
       'Business License Application',
       'Corporate Bank Account',
       'Work Visa & Residence Permit',
-      'Registered Address Service',
-      'Annual Compliance & Accounting'
+      'Registered Business Address',
+      'Annual Compliance & Accounting',
+      'Cross-border Legal Consulting',
+      'Inheritance & Estate Planning',
+      'Foreign IP Rights Protection',
+      'Contract Review & Drafting',
+      'Virtual Office Solutions',
+      'Shared Workspace Rentals',
+      'Meeting Room Booking'
     ]
   },
   { 
@@ -1401,7 +1408,7 @@ function HeroSection({ scrollToSection }: { scrollToSection: (id: string) => voi
                   
                   <div className="w-full h-px bg-slate-700"></div>
                   
-                  <EditableContainer id="hero-card-4" label="Company Registration">
+                  <EditableContainer id="hero-card-4" label="Business & Legal">
                     <div className="flex items-start space-x-3">
                       <div className="bg-amber-500/20 p-2.5 rounded-lg text-amber-300">
                         <Building2 size={24} />
@@ -1409,13 +1416,13 @@ function HeroSection({ scrollToSection }: { scrollToSection: (id: string) => voi
                       <div>
                         <EditableText
                           id="hero-card-4-title"
-                          defaultText="Company Registration"
+                          defaultText="Business & Legal"
                           element="h3"
                           className="text-lg font-bold text-white"
                         />
                         <EditableText
                           id="hero-card-4-desc"
-                          defaultText="WFOE setup, licensing & business consulting in China."
+                          defaultText="Company setup, attorney services, IP rights & office rentals."
                           element="p"
                           className="text-slate-300 text-xs mt-0.5"
                         />
@@ -1524,15 +1531,22 @@ function ServicesSection() {
       bgLight: 'bg-amber-50',
       textColor: 'text-amber-600',
       borderColor: 'border-amber-200',
-      title: 'Company Registration',
-      desc: 'Set up your business in China with expert guidance and full support.',
+      title: 'Business & Legal',
+      desc: 'Company setup, legal services, and office solutions for your China operations.',
       subServices: [
         'WFOE Registration - Foreign-Owned Enterprise',
         'Business License Application - Permits & licenses',
         'Corporate Bank Account - Chinese & offshore',
         'Work Visa & Residence Permit - Z-visa processing',
-        'Registered Address Service - Guangzhou/Shenzhen',
-        'Annual Compliance & Accounting - Tax filing'
+        'Registered Business Address - Guangzhou/Shenzhen',
+        'Annual Compliance & Accounting - Tax filing',
+        'Cross-border Legal Consulting - Non-litigation',
+        'Inheritance & Estate Planning - International',
+        'Foreign IP Rights Protection - Patents, trademarks',
+        'Contract Review & Drafting - Bilingual',
+        'Virtual Office Solutions - Professional address',
+        'Shared Workspace Rentals - Flexible spaces',
+        'Meeting Room Booking - Hourly & daily'
       ]
     },
     { 
