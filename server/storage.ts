@@ -3,7 +3,8 @@ import {
   type SiteContent, type InsertContent,
   type AdminSession, type InsertSession,
   type ContactRequest, type InsertContactRequest,
-  users, siteContent, adminSessions, contactRequests
+  type CustomerReview, type InsertReview,
+  users, siteContent, adminSessions, contactRequests, customerReviews
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
@@ -25,6 +26,12 @@ export interface IStorage {
   
   createContactRequest(request: InsertContactRequest): Promise<ContactRequest>;
   getAllContactRequests(): Promise<ContactRequest[]>;
+  
+  createReview(review: InsertReview): Promise<CustomerReview>;
+  getAllReviews(): Promise<CustomerReview[]>;
+  getApprovedReviews(): Promise<CustomerReview[]>;
+  getPendingReviews(): Promise<CustomerReview[]>;
+  updateReviewStatus(id: string, status: string): Promise<CustomerReview | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -104,6 +111,36 @@ export class DatabaseStorage implements IStorage {
 
   async getAllContactRequests(): Promise<ContactRequest[]> {
     return await db.select().from(contactRequests).orderBy(desc(contactRequests.createdAt));
+  }
+
+  async createReview(review: InsertReview): Promise<CustomerReview> {
+    const [created] = await db.insert(customerReviews).values(review).returning();
+    return created;
+  }
+
+  async getAllReviews(): Promise<CustomerReview[]> {
+    return await db.select().from(customerReviews).orderBy(desc(customerReviews.createdAt));
+  }
+
+  async getApprovedReviews(): Promise<CustomerReview[]> {
+    return await db.select().from(customerReviews)
+      .where(eq(customerReviews.status, "approved"))
+      .orderBy(desc(customerReviews.createdAt));
+  }
+
+  async getPendingReviews(): Promise<CustomerReview[]> {
+    return await db.select().from(customerReviews)
+      .where(eq(customerReviews.status, "pending"))
+      .orderBy(desc(customerReviews.createdAt));
+  }
+
+  async updateReviewStatus(id: string, status: string): Promise<CustomerReview | undefined> {
+    const [updated] = await db
+      .update(customerReviews)
+      .set({ status, reviewedAt: new Date() })
+      .where(eq(customerReviews.id, id))
+      .returning();
+    return updated;
   }
 }
 

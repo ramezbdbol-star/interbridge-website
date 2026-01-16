@@ -2,7 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { randomBytes } from "crypto";
-import { insertContactRequestSchema } from "@shared/schema";
+import { insertContactRequestSchema, insertReviewSchema } from "@shared/schema";
 import { sendContactNotification } from "./email";
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "Mirabelle";
@@ -164,6 +164,123 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Contact form error:", error);
       res.status(500).json({ error: "Failed to submit inquiry. Please try again." });
+    }
+  });
+
+  // Public endpoint to submit a review (no auth required)
+  app.post("/api/reviews", async (req: Request, res: Response) => {
+    try {
+      const parseResult = insertReviewSchema.safeParse(req.body);
+      
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: "Invalid review data", 
+          details: parseResult.error.errors 
+        });
+      }
+      
+      const review = await storage.createReview(parseResult.data);
+      
+      res.json({ 
+        success: true, 
+        message: "Thank you for your review! It will be published after approval.",
+        review 
+      });
+    } catch (error) {
+      console.error("Review submission error:", error);
+      res.status(500).json({ error: "Failed to submit review. Please try again." });
+    }
+  });
+
+  // Public endpoint to get approved reviews
+  app.get("/api/reviews/approved", async (_req: Request, res: Response) => {
+    try {
+      const reviews = await storage.getApprovedReviews();
+      res.json(reviews);
+    } catch (error) {
+      console.error("Get approved reviews error:", error);
+      res.status(500).json({ error: "Failed to fetch reviews" });
+    }
+  });
+
+  // Admin endpoint to get all reviews (requires auth)
+  app.get("/api/admin/reviews", async (req: Request, res: Response) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const token = authHeader.substring(7);
+      const session = await storage.getSessionByToken(token);
+      
+      if (!session) {
+        return res.status(401).json({ error: "Session expired or invalid" });
+      }
+      
+      const reviews = await storage.getAllReviews();
+      res.json(reviews);
+    } catch (error) {
+      console.error("Get all reviews error:", error);
+      res.status(500).json({ error: "Failed to fetch reviews" });
+    }
+  });
+
+  // Admin endpoint to get pending reviews
+  app.get("/api/admin/reviews/pending", async (req: Request, res: Response) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const token = authHeader.substring(7);
+      const session = await storage.getSessionByToken(token);
+      
+      if (!session) {
+        return res.status(401).json({ error: "Session expired or invalid" });
+      }
+      
+      const reviews = await storage.getPendingReviews();
+      res.json(reviews);
+    } catch (error) {
+      console.error("Get pending reviews error:", error);
+      res.status(500).json({ error: "Failed to fetch reviews" });
+    }
+  });
+
+  // Admin endpoint to update review status (approve/reject)
+  app.patch("/api/admin/reviews/:id", async (req: Request, res: Response) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const token = authHeader.substring(7);
+      const session = await storage.getSessionByToken(token);
+      
+      if (!session) {
+        return res.status(401).json({ error: "Session expired or invalid" });
+      }
+      
+      const { id } = req.params;
+      const { status } = req.body;
+      
+      if (!status || !["approved", "rejected"].includes(status)) {
+        return res.status(400).json({ error: "Invalid status. Must be 'approved' or 'rejected'" });
+      }
+      
+      const updated = await storage.updateReviewStatus(id, status);
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Review not found" });
+      }
+      
+      res.json({ success: true, review: updated });
+    } catch (error) {
+      console.error("Update review status error:", error);
+      res.status(500).json({ error: "Failed to update review" });
     }
   });
 

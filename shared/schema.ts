@@ -63,3 +63,26 @@ export const insertContactRequestSchema = createInsertSchema(contactRequests).om
 
 export type InsertContactRequest = z.infer<typeof insertContactRequestSchema>;
 export type ContactRequest = typeof contactRequests.$inferSelect;
+
+export const customerReviews = pgTable("customer_reviews", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  customerName: text("customer_name").notNull(),
+  companyName: text("company_name"),
+  country: text("country"),
+  serviceUsed: text("service_used").notNull(),
+  rating: text("rating").notNull(),
+  reviewText: text("review_text").notNull(),
+  status: text("status").notNull().default("pending"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  reviewedAt: timestamp("reviewed_at"),
+});
+
+export const insertReviewSchema = createInsertSchema(customerReviews).omit({
+  id: true,
+  createdAt: true,
+  reviewedAt: true,
+  status: true,
+});
+
+export type InsertReview = z.infer<typeof insertReviewSchema>;
+export type CustomerReview = typeof customerReviews.$inferSelect;
