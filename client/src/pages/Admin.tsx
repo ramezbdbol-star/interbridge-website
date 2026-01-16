@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useAdmin } from '@/lib/adminContext';
 import { useContent } from '@/lib/contentContext';
 import { useLocation } from 'wouter';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient, apiRequest } from '@/lib/queryClient';
 import { 
   Lock, 
   LogOut, 
@@ -12,15 +14,23 @@ import {
   X, 
   AlertCircle,
   Home,
-  Loader2
+  Loader2,
+  Star,
+  MessageSquare,
+  ThumbsUp,
+  ThumbsDown,
+  Copy,
+  ExternalLink
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
+import type { CustomerReview } from '@shared/schema';
 
 export default function Admin() {
-  const { isAdmin, isLoading, login, logout } = useAdmin();
+  const { isAdmin, isLoading, login, logout, getToken } = useAdmin();
   const { isEditMode, setEditMode, saveAllChanges, hasUnsavedChanges, pendingChanges } = useContent();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -30,6 +40,63 @@ export default function Admin() {
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [reviewFilter, setReviewFilter] = useState<'all' | 'pending'>('pending');
+
+  const { data: reviews = [], isLoading: reviewsLoading, refetch: refetchReviews } = useQuery<CustomerReview[]>({
+    queryKey: ['/api/admin/reviews', reviewFilter],
+    queryFn: async () => {
+      const token = getToken();
+      const endpoint = reviewFilter === 'pending' ? '/api/admin/reviews/pending' : '/api/admin/reviews';
+      const response = await fetch(endpoint, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Failed to fetch reviews');
+      return response.json();
+    },
+    enabled: isAdmin,
+  });
+
+  const updateReviewMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const token = getToken();
+      const response = await fetch(`/api/admin/reviews/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status })
+      });
+      if (!response.ok) throw new Error('Failed to update review');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/reviews'] });
+      refetchReviews();
+    }
+  });
+
+  const handleApprove = (id: string) => {
+    updateReviewMutation.mutate({ id, status: 'approved' }, {
+      onSuccess: () => {
+        toast({ title: "Review Approved", description: "The review is now visible on your website." });
+      }
+    });
+  };
+
+  const handleReject = (id: string) => {
+    updateReviewMutation.mutate({ id, status: 'rejected' }, {
+      onSuccess: () => {
+        toast({ title: "Review Rejected", description: "The review has been rejected and will not be shown." });
+      }
+    });
+  };
+
+  const copyReviewLink = () => {
+    const link = `${window.location.origin}/submit-review`;
+    navigator.clipboard.writeText(link);
+    toast({ title: "Link Copied!", description: "Share this link with your customers to collect reviews." });
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -307,6 +374,153 @@ export default function Admin() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Reviews Management */}
+        <Card className="mt-6">
+          <CardHeader>
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5 text-purple-600" />
+                  Customer Reviews
+                </CardTitle>
+                <CardDescription>
+                  Manage customer reviews - approve or reject submissions
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={copyReviewLink}
+                  data-testid="button-copy-review-link"
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copy Review Link
+                </Button>
+                <a 
+                  href="/submit-review" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
+                  <Button variant="outline" size="sm" data-testid="link-view-review-form">
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    View Form
+                  </Button>
+                </a>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2 mb-4">
+              <Button
+                variant={reviewFilter === 'pending' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setReviewFilter('pending')}
+                data-testid="button-filter-pending"
+              >
+                Pending
+              </Button>
+              <Button
+                variant={reviewFilter === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setReviewFilter('all')}
+                data-testid="button-filter-all"
+              >
+                All Reviews
+              </Button>
+            </div>
+
+            {reviewsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+              </div>
+            ) : reviews.length === 0 ? (
+              <div className="text-center py-8 text-slate-500">
+                <MessageSquare className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                <p className="font-medium">No {reviewFilter === 'pending' ? 'pending ' : ''}reviews yet</p>
+                <p className="text-sm mt-1">Share your review link with customers to collect feedback</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {reviews.map((review) => (
+                  <div 
+                    key={review.id} 
+                    className="p-4 border rounded-lg bg-white"
+                    data-testid={`card-review-${review.id}`}
+                  >
+                    <div className="flex items-start justify-between gap-4 flex-wrap">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-2">
+                          <span className="font-semibold text-slate-900">{review.customerName}</span>
+                          {review.companyName && (
+                            <span className="text-slate-500 text-sm">• {review.companyName}</span>
+                          )}
+                          {review.country && (
+                            <span className="text-slate-400 text-sm">({review.country})</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <Star
+                                key={star}
+                                className={`w-4 h-4 ${
+                                  star <= parseInt(review.rating)
+                                    ? "fill-yellow-400 text-yellow-400"
+                                    : "text-slate-200"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <Badge variant="outline" className="text-xs">
+                            {review.serviceUsed}
+                          </Badge>
+                          <Badge 
+                            variant={review.status === 'approved' ? 'default' : review.status === 'rejected' ? 'destructive' : 'secondary'}
+                            className="text-xs"
+                          >
+                            {review.status}
+                          </Badge>
+                        </div>
+                        <p className="text-slate-600 text-sm">{review.reviewText}</p>
+                        <p className="text-xs text-slate-400 mt-2">
+                          Submitted: {new Date(review.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      {review.status === 'pending' && (
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                            onClick={() => handleApprove(review.id)}
+                            disabled={updateReviewMutation.isPending}
+                            data-testid={`button-approve-${review.id}`}
+                          >
+                            <ThumbsUp className="w-4 h-4 mr-1" />
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => handleReject(review.id)}
+                            disabled={updateReviewMutation.isPending}
+                            data-testid={`button-reject-${review.id}`}
+                          >
+                            <ThumbsDown className="w-4 h-4 mr-1" />
+                            Reject
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Instructions */}
         <Card className="mt-6">

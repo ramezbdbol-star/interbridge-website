@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Star, CheckCircle, Building2, User, MapPin, MessageSquare } from "lucide-react";
-import logoUrl from "@assets/logo.png";
 import { Link } from "wouter";
 
 const reviewFormSchema = z.object({
@@ -106,7 +105,7 @@ export default function SubmitReview() {
       <div className="max-w-2xl mx-auto px-4 py-12">
         <div className="text-center mb-8">
           <Link href="/">
-            <img src={logoUrl} alt="InterBridge Logo" className="h-16 mx-auto mb-4 cursor-pointer" />
+            <img src="/logo.png" alt="InterBridge Logo" className="h-16 mx-auto mb-4 cursor-pointer" />
           </Link>
           <h1 className="text-3xl font-bold text-slate-900 mb-2">Share Your Experience</h1>
           <p className="text-slate-600">
