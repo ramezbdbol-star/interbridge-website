@@ -1000,229 +1000,231 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
   toggleMenu: () => void;
 }) {
   const { isEditMode } = useContent();
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [showServicesMega, setShowServicesMega] = useState(false);
   const [expandedMobileCategory, setExpandedMobileCategory] = useState<string | null>(null);
   
+  const colorClasses: Record<string, { bg: string; text: string; iconBg: string }> = {
+    blue: { bg: 'hover:bg-blue-50', text: 'text-blue-600', iconBg: 'bg-blue-100' },
+    emerald: { bg: 'hover:bg-emerald-50', text: 'text-emerald-600', iconBg: 'bg-emerald-100' },
+    violet: { bg: 'hover:bg-violet-50', text: 'text-violet-600', iconBg: 'bg-violet-100' },
+    amber: { bg: 'hover:bg-amber-50', text: 'text-amber-600', iconBg: 'bg-amber-100' },
+    rose: { bg: 'hover:bg-rose-50', text: 'text-rose-600', iconBg: 'bg-rose-100' },
+  };
+  
   return (
-    <nav className="fixed w-full bg-white/95 backdrop-blur-md shadow-sm z-40 transition-all duration-300">
+    <nav className="fixed w-full bg-white/98 backdrop-blur-lg shadow-sm z-40 transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
+          {/* Logo */}
           <div 
-            className="flex-shrink-0 flex items-center cursor-pointer mr-4" 
+            className="flex-shrink-0 flex items-center cursor-pointer" 
             onClick={() => window.scrollTo(0,0)}
             data-testid="link-logo"
           >
             <img 
               src="/logo.png" 
               alt="InterBridge Solutions Logo" 
-              className="w-11 h-11 mr-2 object-contain"
+              className="w-10 h-10 mr-2.5 object-contain"
             />
             <div className="flex flex-col">
               <EditableText
                 id="brand-name"
                 defaultText="InterBridge"
-                className="font-bold text-lg tracking-tight text-slate-900 leading-none"
+                className="font-bold text-lg tracking-tight text-slate-900 leading-tight"
                 element="span"
               />
               <EditableText
                 id="brand-tagline"
                 defaultText="TRANS & TRADE"
-                className="text-[10px] font-semibold text-blue-700 tracking-wider uppercase"
+                className="text-[9px] font-semibold text-blue-600 tracking-widest uppercase"
                 element="span"
               />
             </div>
           </div>
           
-          <div className="hidden lg:flex items-center gap-0">
-            {/* Service Category Dropdowns */}
-            {serviceCategories.map((category) => {
-              const IconComponent = category.icon;
-              const isOpen = activeDropdown === category.id;
-              const colorClasses: Record<string, { bg: string; text: string; border: string }> = {
-                blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200' },
-                emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200' },
-                violet: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200' },
-                amber: { bg: 'bg-amber-50', text: 'text-amber-600', border: 'border-amber-200' },
-                rose: { bg: 'bg-rose-50', text: 'text-rose-600', border: 'border-rose-200' },
-              };
-              const colors = colorClasses[category.color];
-              
-              return (
-                <div
-                  key={category.id}
-                  className="relative"
-                  onMouseEnter={() => setActiveDropdown(category.id)}
-                  onMouseLeave={() => setActiveDropdown(null)}
-                >
-                  <button
-                    onClick={() => scrollToSection('services')}
-                    className={`font-semibold transition-colors px-1.5 py-2 flex items-center gap-1 text-[14px] ${isOpen ? 'text-blue-700' : 'text-slate-800 hover:text-blue-700'}`}
-                    data-testid={`nav-${category.id}`}
-                  >
-                    <IconComponent size={18} className={colors.text} />
-                    {category.title.split(' ')[0]}
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-                  </button>
-                  
-                  {isOpen && (
-                    <div className="absolute top-full left-0 pt-2 w-[320px] z-50">
-                      <div className={`bg-white rounded-xl shadow-2xl border-2 ${colors.border} overflow-hidden`}>
-                        <div className={`${colors.bg} px-5 py-4 border-b-2 ${colors.border}`}>
-                          <div className="flex items-center gap-3">
-                            <IconComponent size={24} className={colors.text} />
-                            <h4 className={`font-bold text-lg ${colors.text}`}>{category.title}</h4>
-                          </div>
-                        </div>
-                        <div className="p-3">
-                          {category.subServices.map((service, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => {
-                                scrollToSection('services');
-                                setActiveDropdown(null);
-                              }}
-                              className="w-full text-left px-4 py-3 rounded-lg text-slate-800 hover:bg-slate-50 hover:text-blue-700 text-base font-medium flex items-center gap-3 transition-colors"
-                            >
-                              <CheckCircle2 size={18} className={colors.text} />
-                              {service}
-                            </button>
-                          ))}
-                        </div>
-                        <div className={`${colors.bg} px-5 py-3 border-t-2 ${colors.border}`}>
-                          <button 
-                            onClick={() => {
-                              scrollToSection('services');
-                              setActiveDropdown(null);
-                            }}
-                            className={`${colors.text} font-bold text-base hover:underline flex items-center gap-2`}
-                          >
-                            View All Services <ArrowRight size={16} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-
-            {/* More Menu - combines For You, Process, FAQ */}
-            <div 
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center gap-1">
+            {/* Services Mega Menu Trigger */}
+            <div
               className="relative"
-              onMouseEnter={() => setActiveDropdown('more')}
-              onMouseLeave={() => setActiveDropdown(null)}
+              onMouseEnter={() => setShowServicesMega(true)}
+              onMouseLeave={() => setShowServicesMega(false)}
             >
-              <button 
-                className={`font-semibold transition-colors px-1.5 py-2 flex items-center gap-1 text-[14px] ${activeDropdown === 'more' ? 'text-blue-700' : 'text-slate-600 hover:text-blue-700'}`}
-                data-testid="nav-more-dropdown"
+              <button
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors flex items-center gap-1.5 ${showServicesMega ? 'text-blue-600 bg-blue-50' : 'text-slate-700 hover:text-blue-600 hover:bg-slate-50'}`}
+                data-testid="nav-services"
               >
-                More
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${activeDropdown === 'more' ? 'rotate-180' : ''}`} />
+                Services
+                <ChevronDown className={`w-4 h-4 transition-transform ${showServicesMega ? 'rotate-180' : ''}`} />
               </button>
               
-              {activeDropdown === 'more' && (
-                <div className="absolute top-full right-0 pt-2 w-[240px] z-50">
-                  <div className="bg-white rounded-xl shadow-2xl border-2 border-slate-200 p-3">
-                    <button 
-                      onClick={() => { scrollToSection('buyers'); setActiveDropdown(null); }}
-                      className="w-full text-left px-4 py-3 rounded-lg text-slate-800 hover:bg-slate-50 hover:text-blue-700 font-bold text-base flex items-center gap-3"
-                    >
-                      <Users size={20} className="text-slate-500" />
-                      For You
-                    </button>
-                    <button 
-                      onClick={() => { scrollToSection('process'); setActiveDropdown(null); }}
-                      className="w-full text-left px-4 py-3 rounded-lg text-slate-800 hover:bg-slate-50 hover:text-blue-700 font-bold text-base flex items-center gap-3"
-                    >
-                      <LayoutList size={20} className="text-slate-500" />
-                      Our Process
-                    </button>
-                    <button 
-                      onClick={() => { scrollToSection('faq'); setActiveDropdown(null); }}
-                      className="w-full text-left px-4 py-3 rounded-lg text-slate-800 hover:bg-slate-50 hover:text-blue-700 font-bold text-base flex items-center gap-3"
-                    >
-                      <HelpCircle size={20} className="text-slate-500" />
-                      FAQ & Pricing
-                    </button>
+              {/* Mega Menu */}
+              {showServicesMega && (
+                <div className="absolute top-full left-0 pt-3 z-50">
+                  <div className="bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden" style={{ width: 'min(90vw, 720px)' }}>
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-5 py-3">
+                      <h3 className="text-white font-bold">Our Services</h3>
+                      <p className="text-blue-100 text-sm">Complete China sourcing & business solutions</p>
+                    </div>
+                    
+                    {/* Service Grid - 2 columns for better fit */}
+                    <div className="grid grid-cols-2 gap-1 p-3">
+                      {serviceCategories.map((category) => {
+                        const IconComponent = category.icon;
+                        const colors = colorClasses[category.color];
+                        return (
+                          <button
+                            key={category.id}
+                            onClick={() => {
+                              scrollToSection('services');
+                              setShowServicesMega(false);
+                            }}
+                            className={`p-3 rounded-lg text-left transition-colors ${colors.bg}`}
+                            data-testid={`nav-${category.id}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${colors.iconBg} ${colors.text}`}>
+                                <IconComponent size={18} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-semibold text-slate-900 text-sm">{category.title}</h4>
+                                <p className="text-slate-500 text-xs truncate">
+                                  {category.subServices.length} services
+                                </p>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    
+                    {/* Footer */}
+                    <div className="bg-slate-50 px-5 py-2.5 flex items-center justify-between border-t border-slate-100">
+                      <span className="text-slate-500 text-sm">40+ specialized services</span>
+                      <button 
+                        onClick={() => {
+                          scrollToSection('services');
+                          setShowServicesMega(false);
+                        }}
+                        className="text-blue-600 font-medium text-sm hover:text-blue-700 flex items-center gap-1"
+                      >
+                        View All <ArrowRight size={14} />
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
 
-            <EditableButton
-              id="nav-cta"
-              defaultText="Get a Quote"
-              defaultLink="#contact"
-              className="bg-blue-900 text-white px-5 py-2 rounded-full font-medium hover:bg-blue-800 transition-all shadow-lg hover:shadow-blue-900/20 ml-2 text-sm"
-            />
+            {/* Simple Nav Links */}
+            <button 
+              onClick={() => scrollToSection('process')}
+              className="px-4 py-2 rounded-lg font-medium text-sm text-slate-700 hover:text-blue-600 hover:bg-slate-50 transition-colors"
+              data-testid="nav-process"
+            >
+              How It Works
+            </button>
+            
+            <button 
+              onClick={() => scrollToSection('buyers')}
+              className="px-4 py-2 rounded-lg font-medium text-sm text-slate-700 hover:text-blue-600 hover:bg-slate-50 transition-colors"
+              data-testid="nav-about"
+            >
+              About
+            </button>
+            
+            <button 
+              onClick={() => scrollToSection('faq')}
+              className="px-4 py-2 rounded-lg font-medium text-sm text-slate-700 hover:text-blue-600 hover:bg-slate-50 transition-colors"
+              data-testid="nav-faq"
+            >
+              FAQ
+            </button>
 
-            {/* Social Icons */}
-            <div className="flex items-center gap-1 ml-2">
+            {/* Divider */}
+            <div className="w-px h-6 bg-slate-200 mx-2"></div>
+
+            {/* Contact Icons - Subtle */}
+            <div className="flex items-center gap-1">
               <a
                 href="https://wa.me/8615325467680"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-8 h-8 rounded-full bg-green-500 hover:bg-green-600 text-white flex items-center justify-center transition-all hover:scale-110"
-                title="WhatsApp"
+                className="w-9 h-9 rounded-lg text-slate-500 hover:text-green-600 hover:bg-green-50 flex items-center justify-center transition-colors"
+                title="WhatsApp: +86 153 2546 7680"
                 data-testid="header-whatsapp"
               >
-                <SiWhatsapp size={15} />
+                <SiWhatsapp size={18} />
               </a>
               <div className="group relative">
                 <button
-                  className="w-8 h-8 rounded-full bg-green-600 hover:bg-green-700 text-white flex items-center justify-center transition-all hover:scale-110"
+                  className="w-9 h-9 rounded-lg text-slate-500 hover:text-green-600 hover:bg-green-50 flex items-center justify-center transition-colors"
                   title="WeChat: Voguishgirl"
                   data-testid="header-wechat"
                 >
-                  <SiWechat size={15} />
+                  <SiWechat size={18} />
                 </button>
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-2 bg-slate-800 text-white rounded-lg shadow-xl text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
-                  WeChat ID: <span className="font-bold">Voguishgirl</span>
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-45 w-2 h-2 bg-slate-800"></div>
+                <div className="absolute top-full right-0 mt-2 px-3 py-2 bg-slate-800 text-white rounded-lg shadow-xl text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
+                  WeChat ID: <span className="text-green-400">Voguishgirl</span>
+                  <div className="absolute -top-1 right-4 rotate-45 w-2 h-2 bg-slate-800"></div>
                 </div>
               </div>
-              <a
-                href="https://www.tiktok.com/@guangzhouinterpreter"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-8 h-8 rounded-full bg-slate-700 hover:bg-slate-800 text-white flex items-center justify-center transition-all hover:scale-110"
-                title="TikTok"
-                data-testid="header-tiktok"
-              >
-                <SiTiktok size={14} />
-              </a>
             </div>
+
+            {/* CTA Button */}
+            <EditableButton
+              id="nav-cta"
+              defaultText="Get Quote"
+              defaultLink="#contact"
+              className="bg-blue-600 text-white px-6 py-2.5 rounded-full font-semibold hover:bg-blue-700 transition-colors shadow-sm ml-3 text-sm"
+            />
           </div>
 
-          <div className="lg:hidden flex items-center">
+          {/* Mobile Menu Button */}
+          <div className="lg:hidden flex items-center gap-2">
+            <a
+              href="https://wa.me/8615325467680"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-9 h-9 rounded-lg bg-green-500 text-white flex items-center justify-center"
+              data-testid="mobile-whatsapp"
+            >
+              <SiWhatsapp size={18} />
+            </a>
             <button 
               onClick={toggleMenu} 
-              className="text-slate-600 hover:text-blue-900 p-2"
+              className="w-9 h-9 rounded-lg text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors"
               data-testid="button-mobile-menu"
             >
-              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              {isMenuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
         </div>
       </div>
 
+      {/* Mobile Menu */}
       {isMenuOpen && (
-        <div className="lg:hidden bg-white border-t border-slate-100 absolute w-full max-h-[80vh] overflow-y-auto">
-          <div className="px-4 pt-2 pb-6 space-y-1 shadow-xl">
-            {/* Mobile Services with Expandable Categories */}
-            <div className="border-b border-slate-100 pb-2">
+        <div className="lg:hidden bg-white border-t border-slate-100 absolute w-full max-h-[85vh] overflow-y-auto shadow-xl">
+          <div className="p-4 space-y-1">
+            {/* Services Accordion */}
+            <div className="rounded-xl overflow-hidden border border-slate-100">
               <button 
                 onClick={() => setExpandedMobileCategory(expandedMobileCategory === 'services' ? null : 'services')} 
-                className="flex w-full items-center justify-between px-3 py-3 text-slate-800 font-semibold"
+                className="flex w-full items-center justify-between px-4 py-3 bg-slate-50 text-slate-800 font-semibold"
               >
-                Services
-                <ChevronDown className={`w-5 h-5 transition-transform ${expandedMobileCategory === 'services' ? 'rotate-180' : ''}`} />
+                <span className="flex items-center gap-2">
+                  <Layers size={18} className="text-blue-600" />
+                  Services
+                </span>
+                <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${expandedMobileCategory === 'services' ? 'rotate-180' : ''}`} />
               </button>
               
               {expandedMobileCategory === 'services' && (
-                <div className="pl-3 space-y-1 pb-2">
+                <div className="p-2 space-y-1 bg-white">
                   {serviceCategories.map((category) => {
                     const IconComponent = category.icon;
+                    const colors = colorClasses[category.color];
                     return (
                       <button
                         key={category.id}
@@ -1230,12 +1232,15 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
                           scrollToSection('services');
                           toggleMenu();
                         }}
-                        className="flex items-center gap-3 w-full px-3 py-2 text-left rounded-lg hover:bg-slate-50"
+                        className={`flex items-center gap-3 w-full px-3 py-3 text-left rounded-lg transition-colors ${colors.bg}`}
                       >
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center bg-${category.color}-100 text-${category.color}-600`}>
-                          <IconComponent size={16} />
+                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${colors.iconBg} ${colors.text}`}>
+                          <IconComponent size={18} />
                         </div>
-                        <span className="text-slate-700 text-sm font-medium">{category.title}</span>
+                        <div>
+                          <span className="text-slate-800 font-medium text-sm block">{category.title}</span>
+                          <span className="text-slate-500 text-xs">{category.subServices.length} services</span>
+                        </div>
                       </button>
                     );
                   })}
@@ -1243,30 +1248,55 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
               )}
             </div>
 
-            <button 
-              onClick={() => { scrollToSection('buyers'); toggleMenu(); }} 
-              className="block w-full text-left px-3 py-3 text-slate-600 font-medium border-b border-slate-50"
-            >
-              For You
-            </button>
+            {/* Other Links */}
             <button 
               onClick={() => { scrollToSection('process'); toggleMenu(); }} 
-              className="block w-full text-left px-3 py-3 text-slate-600 font-medium border-b border-slate-50"
+              className="flex w-full items-center gap-3 px-4 py-3 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors"
             >
-              Our Process
+              <LayoutList size={18} className="text-slate-400" />
+              How It Works
+            </button>
+            <button 
+              onClick={() => { scrollToSection('buyers'); toggleMenu(); }} 
+              className="flex w-full items-center gap-3 px-4 py-3 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors"
+            >
+              <Users size={18} className="text-slate-400" />
+              About
             </button>
             <button 
               onClick={() => { scrollToSection('faq'); toggleMenu(); }} 
-              className="block w-full text-left px-3 py-3 text-slate-600 font-medium border-b border-slate-50"
+              className="flex w-full items-center gap-3 px-4 py-3 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors"
             >
+              <HelpCircle size={18} className="text-slate-400" />
               FAQ & Pricing
             </button>
-            <button 
-              onClick={() => { scrollToSection('contact'); toggleMenu(); }} 
-              className="block w-full text-left px-3 py-3 text-blue-700 font-bold"
-            >
-              Contact Us
-            </button>
+            
+            {/* Contact CTA */}
+            <div className="pt-3 border-t border-slate-100 mt-3">
+              <button 
+                onClick={() => { scrollToSection('contact'); toggleMenu(); }} 
+                className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold text-center hover:bg-blue-700 transition-colors"
+              >
+                Get a Free Quote
+              </button>
+              
+              {/* Social Links */}
+              <div className="flex items-center justify-center gap-3 mt-4 pt-3 border-t border-slate-100">
+                <a
+                  href="https://wa.me/8615325467680"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-50 text-green-700 text-sm font-medium"
+                >
+                  <SiWhatsapp size={16} />
+                  WhatsApp
+                </a>
+                <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-green-50 text-green-700 text-sm font-medium">
+                  <SiWechat size={16} />
+                  Voguishgirl
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
