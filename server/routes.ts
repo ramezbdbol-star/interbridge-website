@@ -284,5 +284,54 @@ export async function registerRoutes(
     }
   });
 
+  // Public endpoint to submit a dispute case
+  app.post("/api/dispute-cases", async (req: Request, res: Response) => {
+    try {
+      const { insertDisputeCaseSchema } = await import("@shared/schema");
+      const parseResult = insertDisputeCaseSchema.safeParse(req.body);
+      
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          error: "Invalid case data", 
+          details: parseResult.error.errors 
+        });
+      }
+      
+      const disputeCase = await storage.createDisputeCase(parseResult.data);
+      
+      res.json({ 
+        success: true, 
+        message: "Your case has been submitted. We will review it and contact you within 24-48 hours.",
+        disputeCase 
+      });
+    } catch (error) {
+      console.error("Dispute case submission error:", error);
+      res.status(500).json({ error: "Failed to submit case. Please try again." });
+    }
+  });
+
+  // Admin endpoint to get all dispute cases
+  app.get("/api/admin/dispute-cases", async (req: Request, res: Response) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+      
+      const token = authHeader.substring(7);
+      const session = await storage.getSessionByToken(token);
+      
+      if (!session) {
+        return res.status(401).json({ error: "Session expired or invalid" });
+      }
+      
+      const cases = await storage.getAllDisputeCases();
+      res.json(cases);
+    } catch (error) {
+      console.error("Get dispute cases error:", error);
+      res.status(500).json({ error: "Failed to fetch cases" });
+    }
+  });
+
   return httpServer;
 }

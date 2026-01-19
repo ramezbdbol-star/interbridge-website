@@ -86,3 +86,25 @@ export const insertReviewSchema = createInsertSchema(customerReviews).omit({
 
 export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type CustomerReview = typeof customerReviews.$inferSelect;
+
+export const disputeCases = pgTable("dispute_cases", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  disputeType: text("dispute_type").notNull(),
+  amountAtRisk: text("amount_at_risk").notNull(),
+  supplierInfo: text("supplier_info"),
+  description: text("description").notNull(),
+  status: text("status").notNull().default("pending"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertDisputeCaseSchema = createInsertSchema(disputeCases).omit({
+  id: true,
+  createdAt: true,
+  status: true,
+});
+
+export type InsertDisputeCase = z.infer<typeof insertDisputeCaseSchema>;
+export type DisputeCase = typeof disputeCases.$inferSelect;

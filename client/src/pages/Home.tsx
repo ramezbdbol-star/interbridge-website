@@ -52,7 +52,15 @@ import {
   MessageSquare,
   Image,
   Megaphone,
-  Building2
+  Building2,
+  Shield,
+  AlertTriangle,
+  Scale,
+  SearchCheck,
+  Handshake,
+  FileSearch,
+  Target,
+  DollarSign
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SiWhatsapp, SiWechat, SiTiktok } from 'react-icons/si';
@@ -792,6 +800,8 @@ export default function Home() {
         return <StoriesSection key={sectionId} />;
       case 'reviews':
         return <ReviewsSection key={sectionId} />;
+      case 'tradeguard':
+        return <TradeGuardSection key={sectionId} />;
       case 'contact':
         return <ContactSection key={sectionId} />;
       default:
@@ -2123,6 +2133,324 @@ function StoriesSection() {
                 </div>
               </EditableContainer>
             ))}
+          </div>
+        </div>
+      </section>
+    </EditableSection>
+  );
+}
+
+interface DisputeCaseFormData {
+  name: string;
+  email: string;
+  phone: string;
+  disputeType: string;
+  amountAtRisk: string;
+  supplierInfo: string;
+  description: string;
+}
+
+function TradeGuardSection() {
+  const { toast } = useToast();
+  const { isEditMode, isSectionVisible } = useContent();
+  const visible = isSectionVisible('tradeguard');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [formData, setFormData] = useState<DisputeCaseFormData>({
+    name: '',
+    email: '',
+    phone: '',
+    disputeType: 'quality',
+    amountAtRisk: '',
+    supplierInfo: '',
+    description: ''
+  });
+
+  const submitMutation = useMutation({
+    mutationFn: async (data: DisputeCaseFormData) => {
+      const response = await apiRequest('POST', '/api/dispute-cases', data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Case Submitted",
+        description: "We've received your case. Our team will contact you within 24-48 hours.",
+      });
+      setIsSubmitted(true);
+    },
+    onError: () => {
+      toast({
+        title: "Submission Failed",
+        description: "There was an error submitting your case. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    submitMutation.mutate(formData);
+  };
+
+  const scenarios = [
+    {
+      icon: Package,
+      title: "The \"Golden Sample\" Bait & Switch",
+      description: "You received a perfect sample, but the delivered goods were trash—wrong materials, poor quality, or completely broken items. Now the factory blames shipping or won't respond."
+    },
+    {
+      icon: Building2,
+      title: "The \"Ghost\" Manufacturer",
+      description: "You paid a deposit to a professional-looking supplier. Suddenly, their email bounces, phone disconnects, and you realize the \"factory\" was a shell company that vanished with your money."
+    },
+    {
+      icon: DollarSign,
+      title: "The \"Ransom\" Price Hike",
+      description: "Production is done, but the factory demands an extra 20% before releasing your goods, citing \"rising costs\" not in the contract. Your shipment is being held hostage."
+    }
+  ];
+
+  const services = [
+    {
+      icon: SearchCheck,
+      title: "Corporate Background Deep-Dive",
+      description: "We verify business licenses, check litigation records, and confirm if the \"factory\" is a real manufacturer or just a middleman."
+    },
+    {
+      icon: MapPin,
+      title: "On-Site Factory Verification",
+      description: "Our team visits the physical location. If they're ghosting you digitally, we show up at their gate—physical presence forces responses."
+    },
+    {
+      icon: Scale,
+      title: "Legal Demand Letters",
+      description: "Through our partner Law Firm, we issue formal legal notices in Chinese. You become a legal threat, not just another foreign buyer."
+    },
+    {
+      icon: Handshake,
+      title: "Mediation & Negotiation",
+      description: "We bridge the cultural and language gap to negotiate settlements, refunds, or corrective manufacturing without expensive court battles."
+    },
+    {
+      icon: FileSearch,
+      title: "Asset & Credit Investigation",
+      description: "Before you sue, we check if they have assets to seize—ensuring you don't throw good money after bad."
+    },
+    {
+      icon: Target,
+      title: "Recovery Action Plan",
+      description: "We create a strategic plan tailored to your situation, combining legal, on-ground, and negotiation tactics for maximum recovery."
+    }
+  ];
+
+  return (
+    <EditableSection id="tradeguard" name="Trade Guard">
+      <section id="tradeguard" className={`py-24 bg-gradient-to-b from-slate-900 via-red-950 to-slate-900 text-white ${!visible && isEditMode ? 'opacity-40' : ''}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <span className="inline-flex items-center gap-2 bg-red-900/50 text-red-300 px-4 py-2 rounded-full text-sm font-bold uppercase tracking-widest mb-6">
+              <Shield className="w-4 h-4" />
+              Trade Recovery & Legal Support
+            </span>
+            <h2 className="text-4xl md:text-5xl font-extrabold mb-6">
+              Deal Gone Wrong?<br />
+              <span className="text-red-400">Don't Write It Off. Fight Back.</span>
+            </h2>
+            <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
+              We combine local enforcement power with legal expertise to resolve disputes, recover funds, and hold dishonest suppliers accountable.
+            </p>
+          </div>
+
+          <div className="bg-slate-800/50 rounded-2xl p-8 mb-16 border border-slate-700">
+            <div className="flex items-center gap-3 mb-6">
+              <AlertTriangle className="w-6 h-6 text-amber-400" />
+              <h3 className="text-2xl font-bold text-amber-400">Is This You?</h3>
+            </div>
+            <p className="text-slate-300 mb-8">
+              Sourcing from China offers incredible opportunities, but it comes with risks. If you're facing a nightmare scenario—where communication has stopped, quality is unacceptable, or your deposit has vanished—you are not alone, and you are not helpless.
+            </p>
+            <div className="grid md:grid-cols-3 gap-6">
+              {scenarios.map((scenario, i) => (
+                <div key={i} className="bg-slate-900/50 rounded-xl p-6 border border-slate-700 hover:border-red-500/50 transition-colors">
+                  <scenario.icon className="w-10 h-10 text-red-400 mb-4" />
+                  <h4 className="font-bold text-white mb-2">{scenario.title}</h4>
+                  <p className="text-slate-400 text-sm leading-relaxed">{scenario.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-16">
+            <div className="text-center mb-12">
+              <h3 className="text-3xl font-bold mb-4">Our Recovery & Protection Toolkit</h3>
+              <p className="text-slate-300 max-w-2xl mx-auto">
+                Most overseas buyers think their money is gone forever because they don't have a local presence. <span className="text-white font-semibold">We do.</span>
+              </p>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {services.map((service, i) => (
+                <div key={i} className="bg-white/5 rounded-xl p-6 border border-slate-700 hover:border-blue-500/50 transition-colors group">
+                  <div className="bg-blue-600/20 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:bg-blue-600/30 transition-colors">
+                    <service.icon className="w-6 h-6 text-blue-400" />
+                  </div>
+                  <h4 className="font-bold text-white mb-2">{service.title}</h4>
+                  <p className="text-slate-400 text-sm leading-relaxed">{service.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-red-900/30 to-blue-900/30 rounded-2xl p-8 border border-slate-700">
+            <div className="grid lg:grid-cols-2 gap-12">
+              <div>
+                <h3 className="text-3xl font-bold mb-4">Get a Free Case Assessment</h3>
+                <p className="text-slate-300 mb-6">
+                  Tell us about your situation. Our team will review your case and provide an honest assessment of your options—no obligation, no pressure.
+                </p>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 text-slate-300">
+                    <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />
+                    <span>Free initial consultation</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-slate-300">
+                    <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />
+                    <span>Response within 24-48 hours</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-slate-300">
+                    <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />
+                    <span>Honest assessment of recovery options</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-slate-300">
+                    <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />
+                    <span>All information kept strictly confidential</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                {isSubmitted ? (
+                  <div className="bg-green-900/30 rounded-xl p-8 text-center border border-green-700">
+                    <CheckCircle2 className="w-16 h-16 text-green-400 mx-auto mb-4" />
+                    <h4 className="text-2xl font-bold text-white mb-2">Case Submitted</h4>
+                    <p className="text-slate-300">
+                      Thank you for reaching out. Our team will review your case and contact you within 24-48 hours with an assessment.
+                    </p>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-4" data-testid="form-dispute-case">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-1">Your Name *</label>
+                        <input
+                          type="text"
+                          required
+                          value={formData.name}
+                          onChange={(e) => setFormData({...formData, name: e.target.value})}
+                          className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                          placeholder="John Smith"
+                          data-testid="input-dispute-name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-1">Email *</label>
+                        <input
+                          type="email"
+                          required
+                          value={formData.email}
+                          onChange={(e) => setFormData({...formData, email: e.target.value})}
+                          className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                          placeholder="you@company.com"
+                          data-testid="input-dispute-email"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-1">Phone (Optional)</label>
+                        <input
+                          type="tel"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                          className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                          placeholder="+1 234 567 8900"
+                          data-testid="input-dispute-phone"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-1">Nature of Dispute *</label>
+                        <select
+                          required
+                          value={formData.disputeType}
+                          onChange={(e) => setFormData({...formData, disputeType: e.target.value})}
+                          className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                          data-testid="select-dispute-type"
+                        >
+                          <option value="quality">Quality Issue</option>
+                          <option value="non-delivery">Non-Delivery</option>
+                          <option value="fraud">Payment Fraud</option>
+                          <option value="contract">Contract Breach</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-1">Amount at Risk (USD) *</label>
+                        <input
+                          type="text"
+                          required
+                          value={formData.amountAtRisk}
+                          onChange={(e) => setFormData({...formData, amountAtRisk: e.target.value})}
+                          className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                          placeholder="e.g. $15,000"
+                          data-testid="input-dispute-amount"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-1">Supplier Name/Website</label>
+                        <input
+                          type="text"
+                          value={formData.supplierInfo}
+                          onChange={(e) => setFormData({...formData, supplierInfo: e.target.value})}
+                          className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                          placeholder="Factory name or website URL"
+                          data-testid="input-dispute-supplier"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-1">Describe Your Situation *</label>
+                      <textarea
+                        required
+                        rows={4}
+                        value={formData.description}
+                        onChange={(e) => setFormData({...formData, description: e.target.value})}
+                        className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                        placeholder="Tell us what happened—timeline, communications, and current status..."
+                        data-testid="textarea-dispute-description"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      disabled={submitMutation.isPending}
+                      className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-lg"
+                      data-testid="button-submit-dispute"
+                    >
+                      {submitMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
+                          <Shield className="w-5 h-5 mr-2" />
+                          Get Free Case Assessment
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </section>

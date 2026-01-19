@@ -73,7 +73,7 @@ interface ContentContextType {
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
 
-const DEFAULT_SECTION_ORDER = ['hero', 'services', 'buyers', 'process', 'faq', 'stories', 'reviews', 'contact'];
+const DEFAULT_SECTION_ORDER = ['hero', 'services', 'buyers', 'process', 'faq', 'stories', 'reviews', 'tradeguard', 'contact'];
 
 export function ContentProvider({ children }: { children: ReactNode }) {
   const { isAdmin, getToken } = useAdmin();

@@ -4,7 +4,8 @@ import {
   type AdminSession, type InsertSession,
   type ContactRequest, type InsertContactRequest,
   type CustomerReview, type InsertReview,
-  users, siteContent, adminSessions, contactRequests, customerReviews
+  type DisputeCase, type InsertDisputeCase,
+  users, siteContent, adminSessions, contactRequests, customerReviews, disputeCases
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
@@ -32,6 +33,9 @@ export interface IStorage {
   getApprovedReviews(): Promise<CustomerReview[]>;
   getPendingReviews(): Promise<CustomerReview[]>;
   updateReviewStatus(id: string, status: string): Promise<CustomerReview | undefined>;
+  
+  createDisputeCase(disputeCase: InsertDisputeCase): Promise<DisputeCase>;
+  getAllDisputeCases(): Promise<DisputeCase[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -141,6 +145,15 @@ export class DatabaseStorage implements IStorage {
       .where(eq(customerReviews.id, id))
       .returning();
     return updated;
+  }
+
+  async createDisputeCase(disputeCase: InsertDisputeCase): Promise<DisputeCase> {
+    const [created] = await db.insert(disputeCases).values(disputeCase).returning();
+    return created;
+  }
+
+  async getAllDisputeCases(): Promise<DisputeCase[]> {
+    return await db.select().from(disputeCases).orderBy(desc(disputeCases.createdAt));
   }
 }
 
