@@ -298,6 +298,8 @@ function SectionManager({ onClose }: { onClose: () => void }) {
     process: 'Our Process',
     faq: 'FAQ & Pricing',
     stories: 'Success Stories',
+    reviews: 'Customer Reviews',
+    tradeguard: 'Trade Guard & Legal',
     contact: 'Contact'
   };
 
@@ -2431,8 +2433,9 @@ function TradeGuardSection() {
                     </div>
                     <Button
                       type="submit"
+                      size="lg"
                       disabled={submitMutation.isPending}
-                      className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-lg"
+                      className="w-full bg-red-600 text-white"
                       data-testid="button-submit-dispute"
                     >
                       {submitMutation.isPending ? (
