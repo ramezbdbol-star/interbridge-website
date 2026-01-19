@@ -1130,6 +1130,17 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
             {/* Divider */}
             <div className="w-px h-5 bg-slate-200 mx-2"></div>
 
+            <button
+              onClick={() => scrollToSection('tradeguard')}
+              className="px-3 py-2 rounded-lg font-semibold text-base text-red-600 hover:bg-red-50 transition-colors whitespace-nowrap"
+              data-testid="nav-tradeguard"
+            >
+              Trade Guard
+            </button>
+
+            {/* Divider */}
+            <div className="w-px h-5 bg-slate-200 mx-2"></div>
+
             {/* Social Icons */}
             <div className="flex items-center gap-1">
               <a
@@ -1264,6 +1275,13 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
             >
               <HelpCircle size={18} className="text-slate-400" />
               FAQ & Pricing
+            </button>
+            <button 
+              onClick={() => { scrollToSection('tradeguard'); toggleMenu(); }} 
+              className="flex w-full items-center gap-3 px-4 py-3 text-red-600 font-bold rounded-xl hover:bg-red-50 transition-colors"
+            >
+              <ShieldAlert size={18} className="text-red-500" />
+              Trade Guard & Legal
             </button>
             
             {/* Contact CTA */}
