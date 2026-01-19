@@ -10,7 +10,17 @@ The application is built as a full-stack web application with an editable conten
 
 Preferred communication style: Simple, everyday language.
 
-## Recent Updates (January 16, 2026)
+## Recent Updates (January 19, 2026)
+
+**InterBridge Trade Guard & Legal Support:**
+- Added comprehensive Trade Guard section for dispute resolution and recovery services
+- "Is This You?" scenarios: Golden Sample Bait & Switch, Ghost Manufacturer, Ransom Price Hike
+- Recovery & Protection Toolkit: Corporate Background Deep-Dive, On-Site Factory Verification, Legal Demand Letters, Mediation & Negotiation, Asset & Credit Investigation, Recovery Action Plan
+- Case Assessment form with dispute type, amount at risk, supplier info, and description fields
+- Dispute cases database table with pending/reviewed status tracking
+- API endpoints for case submission and admin management
+
+## Previous Updates (January 16, 2026)
 
 **Customer Review System:**
 - Added customer review submission page at /submit-review with star ratings, service selection, and feedback form
