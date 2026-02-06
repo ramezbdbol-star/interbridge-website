@@ -61,11 +61,12 @@ import {
   FileSearch,
   Target,
   DollarSign,
+  ShieldAlert,
   Armchair,
   Palette,
   Truck,
   Ruler,
-  Home,
+  HomeIcon,
   Gem
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -2599,7 +2600,7 @@ function FurnitureDesignSection() {
           {/* Header */}
           <div className="text-center mb-16">
             <span className="inline-flex items-center gap-2 bg-amber-900/50 text-amber-300 px-4 py-2 rounded-full text-sm font-bold uppercase tracking-widest mb-6">
-              <Home className="w-4 h-4" />
+              <HomeIcon className="w-4 h-4" />
               Furniture & Interior Design
             </span>
             <h2 className="text-4xl md:text-5xl font-extrabold mb-6">
