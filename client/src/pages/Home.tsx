@@ -60,7 +60,13 @@ import {
   Handshake,
   FileSearch,
   Target,
-  DollarSign
+  DollarSign,
+  Armchair,
+  Palette,
+  Truck,
+  Ruler,
+  Home,
+  Gem
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SiWhatsapp, SiWechat, SiTiktok } from 'react-icons/si';
@@ -300,6 +306,7 @@ function SectionManager({ onClose }: { onClose: () => void }) {
     stories: 'Success Stories',
     reviews: 'Customer Reviews',
     tradeguard: 'Trade Guard & Legal',
+    furniture: 'Furniture & Design',
     contact: 'Contact'
   };
 
@@ -804,6 +811,8 @@ export default function Home() {
         return <ReviewsSection key={sectionId} />;
       case 'tradeguard':
         return <TradeGuardSection key={sectionId} />;
+      case 'furniture':
+        return <FurnitureDesignSection key={sectionId} />;
       case 'contact':
         return <ContactSection key={sectionId} />;
       default:
@@ -1138,6 +1147,14 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
               Trade Guard
             </button>
 
+            <button
+              onClick={() => scrollToSection('furniture')}
+              className="px-3 py-2 rounded-lg font-semibold text-base text-amber-600 hover:bg-amber-50 transition-colors whitespace-nowrap"
+              data-testid="nav-furniture"
+            >
+              Furniture & Design
+            </button>
+
             {/* Divider */}
             <div className="w-px h-5 bg-slate-200 mx-2"></div>
 
@@ -1276,14 +1293,21 @@ function Navigation({ scrollToSection, isMenuOpen, toggleMenu }: {
               <HelpCircle size={18} className="text-slate-400" />
               FAQ & Pricing
             </button>
-            <button 
-              onClick={() => { scrollToSection('tradeguard'); toggleMenu(); }} 
+            <button
+              onClick={() => { scrollToSection('tradeguard'); toggleMenu(); }}
               className="flex w-full items-center gap-3 px-4 py-3 text-red-600 font-bold rounded-xl hover:bg-red-50 transition-colors"
             >
               <ShieldAlert size={18} className="text-red-500" />
               Trade Guard & Legal
             </button>
-            
+            <button
+              onClick={() => { scrollToSection('furniture'); toggleMenu(); }}
+              className="flex w-full items-center gap-3 px-4 py-3 text-amber-600 font-bold rounded-xl hover:bg-amber-50 transition-colors"
+            >
+              <Armchair size={18} className="text-amber-500" />
+              Furniture & Design
+            </button>
+
             {/* Contact CTA */}
             <div className="pt-3 border-t border-slate-100 mt-3">
               <button 
@@ -2465,6 +2489,301 @@ function TradeGuardSection() {
                         <>
                           <Shield className="w-5 h-5 mr-2" />
                           Get Free Case Assessment
+                        </>
+                      )}
+                    </Button>
+                  </form>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </EditableSection>
+  );
+}
+
+interface FurnitureConsultationFormData {
+  name: string;
+  email: string;
+  phone: string;
+  projectType: string;
+  budgetRange: string;
+  description: string;
+}
+
+function FurnitureDesignSection() {
+  const { toast } = useToast();
+  const { isEditMode, isSectionVisible } = useContent();
+  const visible = isSectionVisible('furniture');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [formData, setFormData] = useState<FurnitureConsultationFormData>({
+    name: '',
+    email: '',
+    phone: '',
+    projectType: 'residential',
+    budgetRange: '',
+    description: ''
+  });
+
+  const submitMutation = useMutation({
+    mutationFn: async (data: FurnitureConsultationFormData) => {
+      const response = await apiRequest('POST', '/api/furniture-consultation', data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Consultation Request Submitted",
+        description: "Our design team will contact you within 24-48 hours.",
+      });
+      setIsSubmitted(true);
+    },
+    onError: () => {
+      toast({
+        title: "Submission Failed",
+        description: "There was an error submitting your request. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    submitMutation.mutate(formData);
+  };
+
+  const services = [
+    {
+      icon: Armchair,
+      title: "Custom Furniture Manufacturing",
+      description: "Bespoke pieces built to your exact specifications — sofas, tables, beds, cabinetry — at direct factory prices."
+    },
+    {
+      icon: Palette,
+      title: "Interior Design Consultation",
+      description: "Professional design planning for homes, offices, hotels, and commercial spaces with mood boards and 3D renders."
+    },
+    {
+      icon: Search,
+      title: "Showroom & Factory Visits",
+      description: "Accompanied visits to furniture showrooms and manufacturing facilities across Guangdong with expert interpretation."
+    },
+    {
+      icon: Gem,
+      title: "Material Sourcing & Selection",
+      description: "Access to premium materials — hardwood, marble, leather, fabrics — sourced directly from suppliers at wholesale prices."
+    },
+    {
+      icon: Truck,
+      title: "Shipping & Logistics",
+      description: "End-to-end delivery coordination from the factory floor to your doorstep, including customs and freight management."
+    },
+    {
+      icon: Ruler,
+      title: "Full Project Management",
+      description: "Complete design-to-delivery management for large-scale furnishing projects — residences, hotels, offices, and developments."
+    }
+  ];
+
+  const valuePoints = [
+    "Save 50–70% compared to retail prices outside China",
+    "Same luxury quality and craftsmanship, direct from the source",
+    "On-site quality inspection before every shipment",
+    "Fully custom designs with no minimum order for personal projects"
+  ];
+
+  return (
+    <EditableSection id="furniture" name="Furniture & Design">
+      <section id="furniture" className={`py-24 bg-gradient-to-b from-slate-900 via-amber-950 to-slate-900 text-white ${!visible && isEditMode ? 'opacity-40' : ''}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="text-center mb-16">
+            <span className="inline-flex items-center gap-2 bg-amber-900/50 text-amber-300 px-4 py-2 rounded-full text-sm font-bold uppercase tracking-widest mb-6">
+              <Home className="w-4 h-4" />
+              Furniture & Interior Design
+            </span>
+            <h2 className="text-4xl md:text-5xl font-extrabold mb-6">
+              Luxury Furniture & Interior Design.<br />
+              <span className="text-amber-400">Factory Prices.</span>
+            </h2>
+            <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
+              Access China's world-class furniture manufacturing and interior design talent directly. Get the same luxury quality found in high-end showrooms worldwide — at a fraction of the cost.
+            </p>
+          </div>
+
+          {/* Service Cards */}
+          <div className="mb-16">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {services.map((service, i) => (
+                <div key={i} className="bg-white/5 rounded-xl p-6 border border-slate-700 hover:border-amber-500/50 transition-colors group">
+                  <div className="bg-amber-600/20 w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:bg-amber-600/30 transition-colors">
+                    <service.icon className="w-6 h-6 text-amber-400" />
+                  </div>
+                  <h4 className="font-bold text-white mb-2">{service.title}</h4>
+                  <p className="text-slate-400 text-sm leading-relaxed">{service.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Value Proposition */}
+          <div className="bg-slate-800/50 rounded-2xl p-8 mb-16 border border-slate-700">
+            <div className="flex items-center gap-3 mb-6">
+              <Gem className="w-6 h-6 text-amber-400" />
+              <h3 className="text-2xl font-bold text-amber-400">Why Source Furniture from China?</h3>
+            </div>
+            <p className="text-slate-300 mb-8">
+              China produces over 70% of the world's furniture. The same factories supplying top international brands are available to you directly — no retail markup, no middlemen. Whether you're furnishing a single room or an entire hotel, we guarantee prices you won't find anywhere else for the same level of quality.
+            </p>
+            <div className="grid md:grid-cols-2 gap-4">
+              {valuePoints.map((point, i) => (
+                <div key={i} className="flex items-center gap-3 text-slate-300">
+                  <CheckCircle2 className="w-5 h-5 text-amber-400 flex-shrink-0" />
+                  <span>{point}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Consultation Form */}
+          <div className="bg-gradient-to-r from-amber-900/30 to-slate-900/50 rounded-2xl p-8 border border-slate-700">
+            <div className="grid lg:grid-cols-2 gap-12">
+              <div>
+                <h3 className="text-3xl font-bold mb-4">Request a Free Design Consultation</h3>
+                <p className="text-slate-300 mb-6">
+                  Tell us about your project. Our team will provide a detailed proposal with design options, pricing, and timelines — completely free, no obligation.
+                </p>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3 text-slate-300">
+                    <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />
+                    <span>Free consultation & project estimate</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-slate-300">
+                    <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />
+                    <span>Response within 24–48 hours</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-slate-300">
+                    <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />
+                    <span>Personalized design mood boards & pricing</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-slate-300">
+                    <CheckCircle2 className="w-5 h-5 text-green-400 flex-shrink-0" />
+                    <span>No commitment required</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                {isSubmitted ? (
+                  <div className="bg-green-900/30 rounded-xl p-8 text-center border border-green-700">
+                    <CheckCircle2 className="w-16 h-16 text-green-400 mx-auto mb-4" />
+                    <h4 className="text-2xl font-bold text-white mb-2">Consultation Request Submitted</h4>
+                    <p className="text-slate-300">
+                      Thank you! Our design team will review your project details and contact you within 24–48 hours with a tailored proposal.
+                    </p>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmit} className="space-y-4" data-testid="form-furniture-consultation">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-1">Your Name *</label>
+                        <input
+                          type="text"
+                          required
+                          value={formData.name}
+                          onChange={(e) => setFormData({...formData, name: e.target.value})}
+                          className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                          placeholder="John Smith"
+                          data-testid="input-furniture-name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-1">Email *</label>
+                        <input
+                          type="email"
+                          required
+                          value={formData.email}
+                          onChange={(e) => setFormData({...formData, email: e.target.value})}
+                          className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                          placeholder="you@company.com"
+                          data-testid="input-furniture-email"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-1">Phone (Optional)</label>
+                        <input
+                          type="tel"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                          className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                          placeholder="+1 234 567 8900"
+                          data-testid="input-furniture-phone"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-300 mb-1">Project Type *</label>
+                        <select
+                          required
+                          value={formData.projectType}
+                          onChange={(e) => setFormData({...formData, projectType: e.target.value})}
+                          className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                          data-testid="select-furniture-project-type"
+                        >
+                          <option value="residential">Residential</option>
+                          <option value="commercial">Commercial</option>
+                          <option value="hotel">Hotel & Hospitality</option>
+                          <option value="office">Office</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-1">Budget Range *</label>
+                      <select
+                        required
+                        value={formData.budgetRange}
+                        onChange={(e) => setFormData({...formData, budgetRange: e.target.value})}
+                        className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        data-testid="select-furniture-budget"
+                      >
+                        <option value="" disabled>Select your budget range</option>
+                        <option value="under-5k">Under $5,000</option>
+                        <option value="5k-20k">$5,000 – $20,000</option>
+                        <option value="20k-50k">$20,000 – $50,000</option>
+                        <option value="50k-100k">$50,000 – $100,000</option>
+                        <option value="100k-plus">$100,000+</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-1">Describe Your Project *</label>
+                      <textarea
+                        required
+                        rows={4}
+                        value={formData.description}
+                        onChange={(e) => setFormData({...formData, description: e.target.value})}
+                        className="w-full bg-slate-800 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none"
+                        placeholder="Tell us about your project — style preferences, room types, specific furniture pieces, timeline..."
+                        data-testid="textarea-furniture-description"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      size="lg"
+                      disabled={submitMutation.isPending}
+                      className="w-full bg-amber-600 hover:bg-amber-700 text-white"
+                      data-testid="button-submit-furniture"
+                    >
+                      {submitMutation.isPending ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          Submitting...
+                        </>
+                      ) : (
+                        <>
+                          <Armchair className="w-5 h-5 mr-2" />
+                          Request Free Consultation
                         </>
                       )}
                     </Button>

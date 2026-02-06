@@ -5,7 +5,8 @@ import {
   type ContactRequest, type InsertContactRequest,
   type CustomerReview, type InsertReview,
   type DisputeCase, type InsertDisputeCase,
-  users, siteContent, adminSessions, contactRequests, customerReviews, disputeCases
+  type FurnitureConsultation, type InsertFurnitureConsultation,
+  users, siteContent, adminSessions, contactRequests, customerReviews, disputeCases, furnitureConsultations
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import { db } from "./db";
@@ -36,6 +37,9 @@ export interface IStorage {
   
   createDisputeCase(disputeCase: InsertDisputeCase): Promise<DisputeCase>;
   getAllDisputeCases(): Promise<DisputeCase[]>;
+
+  createFurnitureConsultation(consultation: InsertFurnitureConsultation): Promise<FurnitureConsultation>;
+  getAllFurnitureConsultations(): Promise<FurnitureConsultation[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -154,6 +158,15 @@ export class DatabaseStorage implements IStorage {
 
   async getAllDisputeCases(): Promise<DisputeCase[]> {
     return await db.select().from(disputeCases).orderBy(desc(disputeCases.createdAt));
+  }
+
+  async createFurnitureConsultation(consultation: InsertFurnitureConsultation): Promise<FurnitureConsultation> {
+    const [created] = await db.insert(furnitureConsultations).values(consultation).returning();
+    return created;
+  }
+
+  async getAllFurnitureConsultations(): Promise<FurnitureConsultation[]> {
+    return await db.select().from(furnitureConsultations).orderBy(desc(furnitureConsultations.createdAt));
   }
 }
 

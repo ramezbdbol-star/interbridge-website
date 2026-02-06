@@ -310,6 +310,32 @@ export async function registerRoutes(
     }
   });
 
+  // Public endpoint to submit a furniture consultation request
+  app.post("/api/furniture-consultation", async (req: Request, res: Response) => {
+    try {
+      const { insertFurnitureConsultationSchema } = await import("@shared/schema");
+      const parseResult = insertFurnitureConsultationSchema.safeParse(req.body);
+
+      if (!parseResult.success) {
+        return res.status(400).json({
+          error: "Invalid consultation data",
+          details: parseResult.error.errors
+        });
+      }
+
+      const consultation = await storage.createFurnitureConsultation(parseResult.data);
+
+      res.json({
+        success: true,
+        message: "Your consultation request has been submitted. Our design team will contact you within 24-48 hours.",
+        consultation
+      });
+    } catch (error) {
+      console.error("Furniture consultation submission error:", error);
+      res.status(500).json({ error: "Failed to submit consultation request. Please try again." });
+    }
+  });
+
   // Admin endpoint to get all dispute cases
   app.get("/api/admin/dispute-cases", async (req: Request, res: Response) => {
     try {
