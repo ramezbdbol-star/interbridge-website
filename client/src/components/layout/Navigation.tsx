@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useContent } from '@/lib/contentContext';
 import { EditableText } from '@/components/EditableComponents';
 import { Menu, X, ChevronDown } from 'lucide-react';
-import { SiWhatsapp } from 'react-icons/si';
+import { SiWhatsapp, SiWechat, SiTiktok } from 'react-icons/si';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { serviceCategories } from '@/data/serviceData';
 import { getTheme } from '@/data/serviceThemes';
@@ -194,13 +194,42 @@ export function Navigation({ scrollToSection }: NavigationProps) {
               FAQ
             </button>
 
-            <button
-              onClick={() => handleNavClick('contact')}
-              className="px-4 py-2 rounded-lg font-medium text-sm text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors"
-              data-testid="nav-contact"
-            >
-              Contact
-            </button>
+            {/* Social Icons */}
+            <div className="flex items-center gap-1.5 ml-1">
+              <a
+                href="https://wa.me/8615325467680"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-green-500 text-white flex items-center justify-center hover:bg-green-600 hover:scale-110 transition-all shadow-sm"
+                title="WhatsApp"
+                data-testid="nav-whatsapp"
+              >
+                <SiWhatsapp size={16} />
+              </a>
+              <div className="group relative">
+                <button
+                  className="w-9 h-9 rounded-full bg-[#07C160] text-white flex items-center justify-center hover:bg-[#06a855] hover:scale-110 transition-all shadow-sm"
+                  title="WeChat"
+                  data-testid="nav-wechat"
+                >
+                  <SiWechat size={16} />
+                </button>
+                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-2 bg-slate-900 text-white rounded-lg shadow-xl text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
+                  WeChat ID: <span className="font-bold">Voguishgirl</span>
+                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
+                </div>
+              </div>
+              <a
+                href="https://www.tiktok.com/@guangzhouinterpreter"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full bg-slate-900 text-white flex items-center justify-center hover:bg-slate-800 hover:scale-110 transition-all shadow-sm"
+                title="TikTok"
+                data-testid="nav-tiktok"
+              >
+                <SiTiktok size={14} />
+              </a>
+            </div>
 
             {/* CTA Button */}
             <button
@@ -294,12 +323,40 @@ export function Navigation({ scrollToSection }: NavigationProps) {
                     >
                       FAQ
                     </button>
-                    <button
-                      onClick={() => handleNavClick('contact')}
-                      className="flex items-center gap-3 w-full px-3 py-3 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors"
-                    >
-                      Contact Us
-                    </button>
+                    {/* Social Icons */}
+                    <div className="border-t border-slate-100 my-3" />
+                    <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider px-3 pt-2 pb-2">
+                      Connect With Us
+                    </div>
+                    <div className="flex items-center gap-3 px-3">
+                      <a
+                        href="https://wa.me/8615325467680"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-11 h-11 rounded-full bg-green-500 text-white flex items-center justify-center hover:bg-green-600 transition-colors shadow-sm"
+                      >
+                        <SiWhatsapp size={20} />
+                      </a>
+                      <div className="group relative">
+                        <button
+                          className="w-11 h-11 rounded-full bg-[#07C160] text-white flex items-center justify-center hover:bg-[#06a855] transition-colors shadow-sm"
+                        >
+                          <SiWechat size={20} />
+                        </button>
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-slate-900 text-white rounded-lg shadow-xl text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50">
+                          WeChat ID: <span className="font-bold">Voguishgirl</span>
+                          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
+                        </div>
+                      </div>
+                      <a
+                        href="https://www.tiktok.com/@guangzhouinterpreter"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-11 h-11 rounded-full bg-slate-900 text-white flex items-center justify-center hover:bg-slate-800 transition-colors shadow-sm"
+                      >
+                        <SiTiktok size={18} />
+                      </a>
+                    </div>
                   </div>
 
                   {/* Footer CTA */}
