@@ -1,0 +1,10 @@
+node_modules
+dist
+.git
+.DS_Store
+.local
+.env
+*.tar.gz
+attached_assets
+README.md
+deploy.sh
