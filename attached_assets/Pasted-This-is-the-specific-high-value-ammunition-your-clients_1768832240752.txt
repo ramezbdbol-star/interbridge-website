@@ -1,0 +1,101 @@
+This is the specific, high-value "ammunition" your clients need to gather. In Chinese commercial law and dispute resolution, documentation is king. Ambiguity favors the defendant (the factory).
+
+To build a winning case—whether for negotiation or court—the buyer must prove the breach with undeniable precision.
+
+Below is the comprehensive Evidence Collection Protocol for your two scenarios.
+
+The "Golden Rule" of Chinese Evidence
+Before we dive into the scenarios, you must educate your clients on one critical fact:
+
+In China, a signature is often worthless without the Official Red Chop (Company Stamp). Any document submitted as evidence must ideally have the official company seal of the manufacturer. Emails and WeChat messages are admissible but require specific handling to be considered strong proof.
+
+Scenario 1: The "Bait & Switch" (Quality Fraud)
+Context: Buyer approved a perfect sample, but the bulk order (container) arrived with significantly inferior quality.
+
+1. The Foundation (Establishing the Standard)
+The biggest mistake buyers make is failing to preserve the "standard" against which the bad goods are judged.
+
+The "Sealed" Sample: Does the buyer still have the original sample? Ideally, this sample should have been signed/dated by the factory or a third-party inspector. If the buyer threw it away, the case is harder.
+
+Sample Approval Email: The specific email thread where the factory explicitly stated, "The bulk order will match this sample exactly."
+
+Technical Spec Sheet (The "Data Pack"): A document listing material composition (e.g., "100% Cotton, 200gsm" vs. just "Cotton"). If the contract says "Cotton" and they sent "Polyester blend," that is fraud. If the contract is vague, the factory will argue "it's within industry tolerance."
+
+2. Proof of The Transaction
+The Stamped Contract (PI): A Proforma Invoice or Sales Contract stamped with the Chinese company’s official seal.
+
+Payment Proof (Swift Copies): Bank transfer slips showing money going specifically to the company’s corporate account (not a personal boss’s account, which is a common evasion tactic).
+
+3. Evidence of The Breach (The "Switch")
+Unboxing Video (Continuous Shot): A video of the container seal being broken and the boxes being opened. This proves the goods were not damaged after delivery.
+
+Detailed Comparison Photos: Side-by-side high-res photos of the Golden Sample vs. the Defective Goods, with a ruler or color chart for scale/reference.
+
+Third-Party Inspection Report: If an inspection was done (even on arrival), that report is critical independent evidence.
+
+Lab Test Results: If the issue is material (e.g., steel grade or chemical composition), a certified lab report proving the material is inferior is irrefutable evidence.
+
+Scenario 2: The "Hostage" Machinery (Severe Delay)
+Context: Industrial machinery promised in 3 months. Now at month 15. The buyer is losing production capacity every day.
+
+1. The Timeline of Promises
+The Production Schedule (Gantt Chart): The original plan agreed upon at signing.
+
+The "Milestone" Updates: Any photos or emails the factory sent showing "progress" (or lack thereof).
+
+Extension Agreements: Did the factory ask for an extension? Did the buyer say "Okay"? Warning: If the buyer agreed to extensions without reserving rights to claim damages, they may have accidentally waived their right to sue.
+
+2. Proof of Delay & Excuse (The "Lies")
+Communication Log (WeChat/Email Export): A chronological record of every excuse. "Power outage," "Raw material shortage," "Covid lockdown." We need to cross-reference these excuses with reality.
+
+Refusal to Perform: If the factory eventually stopped replying or demanded more money to finish (extortion), those messages are gold.
+
+3. Proof of Damages (The Leverage)
+To sue for compensation, you must prove financial loss, not just annoyance.
+
+Downstream Contracts: Did the buyer lose a contract with their client because they didn't have the machine?
+
+Rental Costs: Did the buyer have to rent a temporary machine while waiting?
+
+Lost Profit Calculation: A breakdown of how much money was lost due to 12 months of non-production.
+
+Strategic Assets (Interbridge Secret Weapon)
+This is where YOU come in. The client provides the above; you provide the "Intelligence."
+
+1. The "Real" Identity Check (The Business License)
+
+Why: Many buyers sue the "English Name" of the company (e.g., "Best Machinery Co."). But the legal entity is Chinese (e.g., "Shandong Best Machinery Manufacturing Co., Ltd."). If you sue the wrong name, the court throws it out.
+
+What you get: The official Chinese Business License to confirm who exactly took the money.
+
+2. Asset Search
+
+Why: Before spending money on lawyers, we need to know: Is the factory broke?
+
+What you get: A report on their registered capital, litigation history (are they being sued by 10 other people?), and real estate ownership.
+
+3. "Chop" Verification
+
+Why: Sometimes scammers use a fake Photoshop stamp on the contract.
+
+What you get: Verification if the seal used on the contract matches their official government-registered seal.
+
+Summary Checklist for Your Website
+(You can copy-paste this as a resource for your users)
+
+Preparing Your Case: The Dispute Checklist To recover your funds or enforce a contract, we need to build a "wall of evidence." Please gather the following before our consultation:
+
+[ ] The Contract: Signed and stamped with the Chinese entity's official seal.
+
+[ ] Payment Trail: SWIFT copies or bank slips matching the contract value.
+
+[ ] WeChat/Email History: Exported logs (do not delete the app!).
+
+[ ] The "Golden Standard": The original approved sample (for quality disputes).
+
+[ ] The "Smoking Gun": Photos/Videos of defects or logs of missed deadlines.
+
+[ ] Timeline of Events: A simple 1-page summary of dates (Ordered -> Paid -> Delayed -> Stopped Responding).
+
+Next Step for Us:
+Shall I draft the "Free Case Assessment Form" questions based on these scenarios? We can make it a smart form where if they select "Quality Dispute," it asks if they still have the sample, and if they select "Delay," it asks about the contract penalty clauses.
