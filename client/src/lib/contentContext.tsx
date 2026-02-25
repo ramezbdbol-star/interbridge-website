@@ -73,7 +73,7 @@ interface ContentContextType {
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
 
-const DEFAULT_SECTION_ORDER = ['hero', 'services', 'process', 'faq', 'reviews', 'tradeguard', 'furniture', 'contact'];
+const DEFAULT_SECTION_ORDER = ['hero', 'services', 'process', 'faq', 'reviews', 'tradeguard', 'furniture', 'book-now', 'contact'];
 
 export function ContentProvider({ children }: { children: ReactNode }) {
   const { isAdmin, getToken } = useAdmin();
@@ -146,7 +146,30 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     const stored = getContent(orderKey, '');
     if (stored) {
       try {
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          const normalized = parsed.filter((item): item is string => typeof item === 'string');
+          const mergedOrder = [...normalized];
+
+          DEFAULT_SECTION_ORDER.forEach((sectionId, index) => {
+            if (mergedOrder.includes(sectionId)) return;
+
+            const nextDefaultInOrder = DEFAULT_SECTION_ORDER
+              .slice(index + 1)
+              .find((candidateId) => mergedOrder.includes(candidateId));
+
+            if (!nextDefaultInOrder) {
+              mergedOrder.push(sectionId);
+              return;
+            }
+
+            const insertAt = mergedOrder.indexOf(nextDefaultInOrder);
+            mergedOrder.splice(insertAt, 0, sectionId);
+          });
+
+          return mergedOrder;
+        }
+        return DEFAULT_SECTION_ORDER;
       } catch {
         return DEFAULT_SECTION_ORDER;
       }

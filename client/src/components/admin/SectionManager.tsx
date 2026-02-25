@@ -54,6 +54,7 @@ export function SectionManager({ onClose }: { onClose: () => void }) {
     reviews: 'Client Reviews',
     tradeguard: 'Trade Guard & Legal',
     furniture: 'Furniture & Design',
+    'book-now': 'Book Now',
     contact: 'Contact',
   };
 

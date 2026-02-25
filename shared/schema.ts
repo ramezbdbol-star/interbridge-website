@@ -129,3 +129,82 @@ export const insertFurnitureConsultationSchema = createInsertSchema(furnitureCon
 
 export type InsertFurnitureConsultation = z.infer<typeof insertFurnitureConsultationSchema>;
 export type FurnitureConsultation = typeof furnitureConsultations.$inferSelect;
+
+export const bookingRequests = pgTable("booking_requests", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  status: text("status").notNull().default("pending"),
+  name: text("name"),
+  email: text("email"),
+  phone: text("phone"),
+  purpose: text("purpose"),
+  notes: text("notes"),
+  needsMeetLink: boolean("needs_meet_link").notNull().default(false),
+  isUrgent: boolean("is_urgent").notNull().default(false),
+  visitorTimezone: text("visitor_timezone").notNull(),
+  startAtUtc: timestamp("start_at_utc").notNull(),
+  endAtUtc: timestamp("end_at_utc").notNull(),
+  holdEventId: text("hold_event_id"),
+  holdStatus: text("hold_status").notNull().default("missing"),
+  holdExpiresAt: timestamp("hold_expires_at").notNull(),
+  decidedAt: timestamp("decided_at"),
+  decisionSource: text("decision_source"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBookingRequestSchema = createInsertSchema(bookingRequests).omit({
+  id: true,
+  status: true,
+  holdEventId: true,
+  holdStatus: true,
+  holdExpiresAt: true,
+  decidedAt: true,
+  decisionSource: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertBookingRequest = z.infer<typeof insertBookingRequestSchema>;
+export type BookingRequest = typeof bookingRequests.$inferSelect;
+export type NewBookingRequest = typeof bookingRequests.$inferInsert;
+
+export const bookingActionTokens = pgTable("booking_action_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  bookingRequestId: varchar("booking_request_id").notNull().references(() => bookingRequests.id),
+  action: text("action").notNull(),
+  tokenHash: text("token_hash").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  usedAt: timestamp("used_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const insertBookingActionTokenSchema = createInsertSchema(bookingActionTokens).omit({
+  id: true,
+  usedAt: true,
+  createdAt: true,
+});
+
+export type InsertBookingActionToken = z.infer<typeof insertBookingActionTokenSchema>;
+export type BookingActionToken = typeof bookingActionTokens.$inferSelect;
+export type NewBookingActionToken = typeof bookingActionTokens.$inferInsert;
+
+export const googleCalendarConnection = pgTable("google_calendar_connection", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  googleEmail: text("google_email").notNull(),
+  calendarId: text("calendar_id").notNull().default("primary"),
+  refreshTokenEncrypted: text("refresh_token_encrypted").notNull(),
+  accessTokenEncrypted: text("access_token_encrypted"),
+  tokenExpiry: timestamp("token_expiry"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertGoogleCalendarConnectionSchema = createInsertSchema(googleCalendarConnection).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertGoogleCalendarConnection = z.infer<typeof insertGoogleCalendarConnectionSchema>;
+export type GoogleCalendarConnection = typeof googleCalendarConnection.$inferSelect;
+export type NewGoogleCalendarConnection = typeof googleCalendarConnection.$inferInsert;

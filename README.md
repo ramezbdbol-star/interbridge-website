@@ -9,6 +9,12 @@ The following environment variables must be set:
 - `DATABASE_URL` - Neon PostgreSQL connection string
 - `GMAIL_APP_PASSWORD` - Gmail App Password for email notifications (optional)
 - `SESSION_SECRET` - Secret key for session management (optional, auto-generated if not set)
+- `GOOGLE_OAUTH_CLIENT_ID` - Google OAuth client ID for Book Now calendar integration
+- `GOOGLE_OAUTH_CLIENT_SECRET` - Google OAuth client secret
+- `GOOGLE_OAUTH_REDIRECT_URI` - OAuth callback URL (e.g. `https://your-domain.com/api/admin/google-calendar/callback`)
+- `GOOGLE_TOKEN_ENCRYPTION_KEY` - Secret used to encrypt Google refresh/access tokens in database
+- `BOOKING_ACTION_TOKEN_SECRET` - Secret used to sign one-click approve/reject booking links
+- `BOOKING_RATE_LIMIT_PER_HOUR` - Optional booking submission rate-limit (default: `6`)
 
 ## Deployment
 

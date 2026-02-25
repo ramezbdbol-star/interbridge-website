@@ -25,6 +25,7 @@ import { FaqSection } from '@/components/sections/FaqSection';
 import { SocialProofSection } from '@/components/sections/SocialProofSection';
 import { TradeGuardSection } from '@/components/sections/TradeGuardSection';
 import { FurnitureSection } from '@/components/sections/FurnitureSection';
+import { BookNowSection } from '@/components/sections/BookNowSection';
 import { ContactSection } from '@/components/sections/ContactSection';
 
 // Admin
@@ -107,6 +108,8 @@ export default function Home() {
         return <TradeGuardSection key={sectionId} />;
       case 'furniture':
         return <FurnitureSection key={sectionId} />;
+      case 'book-now':
+        return <BookNowSection key={sectionId} />;
       case 'contact':
         return <ContactSection key={sectionId} />;
       default:

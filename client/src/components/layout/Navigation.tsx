@@ -233,11 +233,11 @@ export function Navigation({ scrollToSection }: NavigationProps) {
 
             {/* CTA Button */}
             <button
-              onClick={() => handleNavClick('contact')}
+              onClick={() => handleNavClick('book-now')}
               className="bg-blue-600 text-white px-5 py-2.5 rounded-full font-bold hover:bg-blue-700 transition-colors shadow-md ml-2 text-sm"
               data-testid="nav-cta"
             >
-              Get a Free Quote
+              Book Now
             </button>
           </div>
 
@@ -362,10 +362,10 @@ export function Navigation({ scrollToSection }: NavigationProps) {
                   {/* Footer CTA */}
                   <div className="p-4 border-t border-slate-100">
                     <button
-                      onClick={() => handleNavClick('contact')}
+                      onClick={() => handleNavClick('book-now')}
                       className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold text-center hover:bg-blue-700 transition-colors"
                     >
-                      Get a Free Quote
+                      Book Now
                     </button>
                   </div>
                 </div>
