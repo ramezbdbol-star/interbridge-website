@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 
-const ADMIN_EMAIL = "interbridge.mira@gmail.com";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL?.trim() || "interbridge.mira@gmail.com";
 const ADMIN_PHONE = "+86 15325467680";
 
 interface ContactFormData {

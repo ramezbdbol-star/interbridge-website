@@ -73,7 +73,8 @@ interface ContentContextType {
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
 
-const DEFAULT_SECTION_ORDER = ['hero', 'services', 'process', 'faq', 'reviews', 'tradeguard', 'furniture', 'book-now', 'contact'];
+const DEFAULT_SECTION_ORDER = ['hero', 'services', 'process', 'faq', 'reviews', 'book-now', 'contact'];
+const DEFAULT_SECTION_SET = new Set(DEFAULT_SECTION_ORDER);
 
 export function ContentProvider({ children }: { children: ReactNode }) {
   const { isAdmin, getToken } = useAdmin();
@@ -148,7 +149,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
       try {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) {
-          const normalized = parsed.filter((item): item is string => typeof item === 'string');
+          const normalized = parsed
+            .filter((item): item is string => typeof item === 'string')
+            .filter((sectionId) => DEFAULT_SECTION_SET.has(sectionId) || sectionId.startsWith('custom-'));
           const mergedOrder = [...normalized];
 
           DEFAULT_SECTION_ORDER.forEach((sectionId, index) => {
@@ -169,12 +172,12 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
           return mergedOrder;
         }
-        return DEFAULT_SECTION_ORDER;
+        return [...DEFAULT_SECTION_ORDER];
       } catch {
-        return DEFAULT_SECTION_ORDER;
+        return [...DEFAULT_SECTION_ORDER];
       }
     }
-    return DEFAULT_SECTION_ORDER;
+    return [...DEFAULT_SECTION_ORDER];
   };
 
   const saveSectionOrder = (order: string[]) => {
@@ -194,7 +197,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const moveSectionDown = (sectionId: string) => {
     const order = getSectionOrder();
     const index = order.indexOf(sectionId);
-    if (index < order.length - 1) {
+    if (index !== -1 && index < order.length - 1) {
       const newOrder = [...order];
       [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
       saveSectionOrder(newOrder);

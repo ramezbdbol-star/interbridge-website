@@ -1,34 +1,20 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'wouter';
-import { useAdmin } from '@/lib/adminContext';
+import { Layers } from 'lucide-react';
 import { useContent } from '@/lib/contentContext';
-import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
-import {
-  X,
-  Save,
-  Settings,
-  LogOut,
-  Loader2,
-  Layers,
-} from 'lucide-react';
 
-// Layout
 import { Navigation } from '@/components/layout/Navigation';
 import { Footer } from '@/components/layout/Footer';
 
-// Sections
 import { HeroSection } from '@/components/sections/HeroSection';
 import { ServicesOverview } from '@/components/sections/ServicesOverview';
 import { ProcessSection } from '@/components/sections/ProcessSection';
 import { FaqSection } from '@/components/sections/FaqSection';
 import { SocialProofSection } from '@/components/sections/SocialProofSection';
-import { TradeGuardSection } from '@/components/sections/TradeGuardSection';
-import { FurnitureSection } from '@/components/sections/FurnitureSection';
 import { BookNowSection } from '@/components/sections/BookNowSection';
 import { ContactSection } from '@/components/sections/ContactSection';
 
-// Admin
+import { AdminFloatingToolbar } from '@/components/admin/AdminFloatingToolbar';
 import { SectionManager } from '@/components/admin/SectionManager';
 import { InlineSectionAdder } from '@/components/admin/InlineSectionAdder';
 import { CustomSectionRenderer } from '@/components/admin/CustomSectionRenderer';
@@ -36,51 +22,63 @@ import { CustomSectionRenderer } from '@/components/admin/CustomSectionRenderer'
 export default function Home() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [showSectionPanel, setShowSectionPanel] = useState(true);
-  const { isAdmin, logout } = useAdmin();
-  const {
-    isEditMode,
-    setEditMode,
-    saveAllChanges,
-    hasUnsavedChanges,
-    getSectionOrder,
-    isSectionVisible,
-    getCustomSections,
-    pendingChanges,
-  } = useContent();
-  const [, setLocation] = useLocation();
-  const { toast } = useToast();
-  const [isSaving, setIsSaving] = useState(false);
+  const { isEditMode, getSectionOrder, isSectionVisible, getCustomSections } = useContent();
+  const [location] = useLocation();
 
   const toggleFaq = (index: number) => setOpenFaq(openFaq === index ? null : index);
 
-  const scrollToSection = (id: string) => {
+  const scrollToSection = (id: string, behavior: ScrollBehavior = 'smooth') => {
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      element.scrollIntoView({ behavior });
+      const nextHash = `#${id}`;
+      if (window.location.hash !== nextHash) {
+        window.history.replaceState(null, '', `/#${id}`);
+      }
     }
   };
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    const result = await saveAllChanges();
-    toast({
-      title: result.success ? 'Saved!' : 'Error',
-      description: result.message,
-      variant: result.success ? 'default' : 'destructive',
-    });
-    setIsSaving(false);
-  };
-
-  const handleLogout = async () => {
-    await logout();
-    toast({
-      title: 'Logged out',
-      description: 'You have been successfully logged out.',
-    });
-  };
-
   const sectionOrder = getSectionOrder();
+  const sectionOrderKey = sectionOrder.join('|');
   const customSections = getCustomSections();
+
+  useEffect(() => {
+    const scrollFromHash = () => {
+      if (window.location.pathname !== '/' || !window.location.hash) {
+        return;
+      }
+
+      const targetId = decodeURIComponent(window.location.hash.slice(1));
+      if (!targetId) {
+        return;
+      }
+
+      let attempts = 0;
+      const maxAttempts = 12;
+
+      const attemptScroll = () => {
+        const element = document.getElementById(targetId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+          return;
+        }
+
+        if (attempts < maxAttempts) {
+          attempts += 1;
+          window.setTimeout(attemptScroll, 80);
+        }
+      };
+
+      window.setTimeout(attemptScroll, 40);
+    };
+
+    scrollFromHash();
+    window.addEventListener('hashchange', scrollFromHash);
+
+    return () => {
+      window.removeEventListener('hashchange', scrollFromHash);
+    };
+  }, [location, sectionOrderKey]);
 
   const renderSection = (sectionId: string) => {
     if (!isSectionVisible(sectionId) && !isEditMode) return null;
@@ -95,7 +93,7 @@ export default function Home() {
 
     switch (sectionId) {
       case 'hero':
-        return <HeroSection key={sectionId} scrollToSection={scrollToSection} />;
+        return <HeroSection key={sectionId} />;
       case 'services':
         return <ServicesOverview key={sectionId} />;
       case 'process':
@@ -104,10 +102,6 @@ export default function Home() {
         return <FaqSection key={sectionId} openFaq={openFaq} toggleFaq={toggleFaq} />;
       case 'reviews':
         return <SocialProofSection key={sectionId} />;
-      case 'tradeguard':
-        return <TradeGuardSection key={sectionId} />;
-      case 'furniture':
-        return <FurnitureSection key={sectionId} />;
       case 'book-now':
         return <BookNowSection key={sectionId} />;
       case 'contact':
@@ -119,86 +113,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
-      {/* Admin Toolbar */}
-      {isAdmin && (
-        <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-2" data-testid="admin-toolbar">
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-2 flex flex-col gap-2">
-            <Button
-              size="sm"
-              variant={isEditMode ? 'default' : 'outline'}
-              onClick={() => setEditMode(!isEditMode)}
-              className="gap-2"
-              data-testid="button-toggle-edit"
-            >
-              {isEditMode ? (
-                <>
-                  <X className="w-4 h-4" />
-                  Exit Edit
-                </>
-              ) : (
-                <>
-                  <Settings className="w-4 h-4" />
-                  Edit Mode
-                </>
-              )}
-            </Button>
+      <AdminFloatingToolbar />
 
-            {isEditMode && hasUnsavedChanges && (
-              <Button
-                size="sm"
-                variant="default"
-                onClick={handleSave}
-                disabled={isSaving}
-                className="gap-2 bg-green-600 hover:bg-green-700"
-                data-testid="button-save-floating"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    Save ({Object.keys(pendingChanges).length})
-                  </>
-                )}
-              </Button>
-            )}
-
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setLocation('/admin')}
-              className="gap-2"
-              data-testid="button-admin-panel"
-            >
-              <Settings className="w-4 h-4" />
-              Panel
-            </Button>
-
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={handleLogout}
-              className="gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
-              data-testid="button-logout-floating"
-            >
-              <LogOut className="w-4 h-4" />
-              Logout
-            </Button>
-          </div>
-
-          {isEditMode && (
-            <div className="bg-blue-600 text-white text-xs px-3 py-2 rounded-lg text-center max-w-[180px]">
-              <div className="font-medium mb-1">Edit Mode Active</div>
-              <div className="text-blue-200 text-[10px]">Click text to edit &bull; Hover for controls</div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Section Manager (edit mode) */}
       {isEditMode && showSectionPanel && <SectionManager onClose={() => setShowSectionPanel(false)} />}
 
       {isEditMode && !showSectionPanel && (
@@ -212,7 +128,6 @@ export default function Home() {
         </button>
       )}
 
-      {/* Main Content */}
       <Navigation scrollToSection={scrollToSection} />
 
       <main>

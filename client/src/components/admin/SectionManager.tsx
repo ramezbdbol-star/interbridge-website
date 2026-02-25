@@ -52,8 +52,6 @@ export function SectionManager({ onClose }: { onClose: () => void }) {
     process: 'Our Process',
     faq: 'FAQ & Pricing',
     reviews: 'Client Reviews',
-    tradeguard: 'Trade Guard & Legal',
-    furniture: 'Furniture & Design',
     'book-now': 'Book Now',
     contact: 'Contact',
   };

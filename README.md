@@ -7,6 +7,7 @@ A professional B2B service platform connecting businesses directly to Chinese ma
 The following environment variables must be set:
 
 - `DATABASE_URL` - Neon PostgreSQL connection string
+- `ADMIN_EMAIL` - Optional admin mailbox used for contact/booking notifications and Gmail sender (default: `interbridge.mira@gmail.com`)
 - `GMAIL_APP_PASSWORD` - Gmail App Password for email notifications (optional)
 - `SESSION_SECRET` - Secret key for session management (optional, auto-generated if not set)
 - `GOOGLE_OAUTH_CLIENT_ID` - Google OAuth client ID for Book Now calendar integration
