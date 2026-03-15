@@ -7,7 +7,10 @@ import { queryClient } from '@/lib/queryClient';
 import {
   AlertCircle,
   CalendarDays,
+  CalendarRange,
   Check,
+  CheckCircle2,
+  Clock3,
   Copy,
   Edit3,
   ExternalLink,
@@ -18,8 +21,11 @@ import {
   Loader2,
   Lock,
   LogOut,
+  Mail,
   MessageSquare,
+  Phone,
   Save,
+  Search,
   Star,
   ThumbsDown,
   ThumbsUp,
@@ -45,6 +51,35 @@ function formatDateTime(value: Date | string): string {
   return new Date(value).toLocaleString();
 }
 
+function formatDateLabel(value: Date | string): string {
+  return new Date(value).toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+function formatTimeLabel(value: Date | string): string {
+  return new Date(value).toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function toDateInputValue(value: Date | string): string {
+  const date = new Date(value);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function toCalendarDayLink(value: Date | string): string {
+  const date = new Date(value);
+  return `https://calendar.google.com/calendar/u/0/r/day/${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`;
+}
+
 export default function Admin() {
   const { isAdmin, isLoading, login, logout, getToken } = useAdmin();
   const { isEditMode, setEditMode, saveAllChanges, hasUnsavedChanges, pendingChanges } = useContent();
@@ -58,6 +93,9 @@ export default function Admin() {
   const [isSaving, setIsSaving] = useState(false);
   const [reviewFilter, setReviewFilter] = useState<'all' | 'pending'>('pending');
   const [bookingEmailDrafts, setBookingEmailDrafts] = useState<Record<string, string>>({});
+  const [approvedSearch, setApprovedSearch] = useState('');
+  const [approvedDateFrom, setApprovedDateFrom] = useState('');
+  const [approvedDateTo, setApprovedDateTo] = useState('');
 
   const {
     data: reviews = [],
@@ -89,6 +127,23 @@ export default function Admin() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error('Failed to fetch pending bookings');
+      return response.json();
+    },
+    enabled: isAdmin,
+  });
+
+  const {
+    data: approvedBookings = [],
+    isLoading: approvedBookingsLoading,
+    refetch: refetchApprovedBookings,
+  } = useQuery<BookingRequest[]>({
+    queryKey: ['/api/admin/bookings', 'approved'],
+    queryFn: async () => {
+      const token = getToken();
+      const response = await fetch('/api/admin/bookings?status=approved', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error('Failed to fetch approved bookings');
       return response.json();
     },
     enabled: isAdmin,
@@ -153,6 +208,7 @@ export default function Admin() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/bookings'] });
       refetchBookings();
+      refetchApprovedBookings();
     },
   });
 
@@ -327,6 +383,57 @@ export default function Admin() {
   const goToWebsite = () => {
     setLocation('/');
   };
+
+  const approvedSearchValue = approvedSearch.trim().toLowerCase();
+  const filteredApprovedBookings = approvedBookings
+    .filter((booking) => {
+      const bookingDate = toDateInputValue(booking.startAtUtc);
+      if (approvedDateFrom && bookingDate < approvedDateFrom) return false;
+      if (approvedDateTo && bookingDate > approvedDateTo) return false;
+
+      if (!approvedSearchValue) return true;
+
+      const haystack = [
+        booking.name,
+        booking.email,
+        booking.phone,
+        booking.purpose,
+        booking.notes,
+        booking.id,
+      ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+      return haystack.includes(approvedSearchValue);
+    })
+    .sort((a, b) => new Date(a.startAtUtc).getTime() - new Date(b.startAtUtc).getTime());
+
+  const approvedBookingGroups = filteredApprovedBookings.reduce<Array<{ label: string; bookings: BookingRequest[] }>>(
+    (groups, booking) => {
+      const label = formatDateLabel(booking.startAtUtc);
+      const existingGroup = groups.find((group) => group.label === label);
+
+      if (existingGroup) {
+        existingGroup.bookings.push(booking);
+      } else {
+        groups.push({ label, bookings: [booking] });
+      }
+
+      return groups;
+    },
+    [],
+  );
+
+  const now = Date.now();
+  const nextApprovedBooking =
+    approvedBookings
+      .filter((booking) => new Date(booking.endAtUtc).getTime() >= now)
+      .sort((a, b) => new Date(a.startAtUtc).getTime() - new Date(b.startAtUtc).getTime())[0] || null;
+  const approvedThisWeekCount = approvedBookings.filter((booking) => {
+    const time = new Date(booking.startAtUtc).getTime();
+    return time >= now && time <= now + 7 * 24 * 60 * 60 * 1000;
+  }).length;
 
   if (isLoading) {
     return (
@@ -879,6 +986,162 @@ export default function Admin() {
                           )}
                         </div>
                       </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="gap-4">
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                      Approved Booking Schedule
+                    </CardTitle>
+                    <CardDescription>Review confirmed bookings by date, contact info, and approval time.</CardDescription>
+                  </div>
+                  <a href="https://calendar.google.com/calendar/u/0/r" target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" size="sm">
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Open Google Calendar
+                    </Button>
+                  </a>
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-3">
+                  <div className="rounded-xl border border-emerald-100 bg-emerald-50/70 p-4">
+                    <p className="text-xs font-medium uppercase tracking-wide text-emerald-700">Approved Total</p>
+                    <p className="mt-2 text-2xl font-semibold text-slate-900">{approvedBookings.length}</p>
+                  </div>
+                  <div className="rounded-xl border border-blue-100 bg-blue-50/70 p-4">
+                    <p className="text-xs font-medium uppercase tracking-wide text-blue-700">Next Confirmed Slot</p>
+                    <p className="mt-2 text-sm font-semibold text-slate-900">
+                      {nextApprovedBooking ? formatDateTime(nextApprovedBooking.startAtUtc) : 'No upcoming bookings'}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-violet-100 bg-violet-50/70 p-4">
+                    <p className="text-xs font-medium uppercase tracking-wide text-violet-700">Next 7 Days</p>
+                    <p className="mt-2 text-2xl font-semibold text-slate-900">{approvedThisWeekCount}</p>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid gap-3 lg:grid-cols-[1.4fr,1fr,1fr]">
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <Input
+                      value={approvedSearch}
+                      onChange={(e) => setApprovedSearch(e.target.value)}
+                      placeholder="Search by client, email, phone, purpose, or booking ID"
+                      className="pl-10"
+                    />
+                  </div>
+                  <Input type="date" value={approvedDateFrom} onChange={(e) => setApprovedDateFrom(e.target.value)} />
+                  <Input type="date" value={approvedDateTo} onChange={(e) => setApprovedDateTo(e.target.value)} />
+                </div>
+
+                {(approvedSearch || approvedDateFrom || approvedDateTo) && (
+                  <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                    <span>{filteredApprovedBookings.length} approved bookings match the current filters.</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setApprovedSearch('');
+                        setApprovedDateFrom('');
+                        setApprovedDateTo('');
+                      }}
+                    >
+                      Clear filters
+                    </Button>
+                  </div>
+                )}
+
+                {approvedBookingsLoading ? (
+                  <div className="flex items-center gap-2 py-6 text-slate-500">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Loading approved bookings...
+                  </div>
+                ) : approvedBookingGroups.length === 0 ? (
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                    No approved bookings match the current filters.
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {approvedBookingGroups.map((group) => (
+                      <section key={group.label} className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <CalendarRange className="w-4 h-4 text-slate-500" />
+                          <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-700">{group.label}</h3>
+                        </div>
+
+                        <div className="grid gap-4 xl:grid-cols-2">
+                          {group.bookings.map((booking) => (
+                            <div key={booking.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                              <div className="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                  <p className="text-lg font-semibold text-slate-900">{booking.name || 'Unnamed Booking'}</p>
+                                  <p className="mt-1 text-sm text-slate-500">Booking ID: {booking.id}</p>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  <Badge>{booking.status}</Badge>
+                                  {booking.needsMeetLink && <Badge variant="outline">Google Meet</Badge>}
+                                  {booking.isUrgent && <Badge variant="destructive">Urgent</Badge>}
+                                </div>
+                              </div>
+
+                              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                                <div className="rounded-xl bg-slate-50 p-3">
+                                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Scheduled</p>
+                                  <p className="mt-1 font-medium text-slate-900">
+                                    {formatTimeLabel(booking.startAtUtc)} - {formatTimeLabel(booking.endAtUtc)}
+                                  </p>
+                                  <p className="mt-1 text-sm text-slate-500">{booking.visitorTimezone}</p>
+                                </div>
+                                <div className="rounded-xl bg-slate-50 p-3">
+                                  <p className="text-xs font-medium uppercase tracking-wide text-slate-500">Approved</p>
+                                  <p className="mt-1 font-medium text-slate-900">
+                                    {booking.decidedAt ? formatDateTime(booking.decidedAt) : 'Not recorded'}
+                                  </p>
+                                  <p className="mt-1 text-sm text-slate-500">Hold status: {booking.holdStatus}</p>
+                                </div>
+                              </div>
+
+                              <div className="mt-4 space-y-2 text-sm text-slate-600">
+                                <div className="flex items-center gap-2">
+                                  <Mail className="w-4 h-4 text-slate-400" />
+                                  <span>{booking.email || '(not provided)'}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Phone className="w-4 h-4 text-slate-400" />
+                                  <span>{booking.phone || '(not provided)'}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Clock3 className="w-4 h-4 text-slate-400" />
+                                  <span>{booking.purpose || '(no purpose provided)'}</span>
+                                </div>
+                              </div>
+
+                              {booking.notes && (
+                                <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-600">
+                                  {booking.notes}
+                                </div>
+                              )}
+
+                              <div className="mt-4 flex flex-wrap gap-2">
+                                <a href={toCalendarDayLink(booking.startAtUtc)} target="_blank" rel="noopener noreferrer">
+                                  <Button variant="outline" size="sm">
+                                    <CalendarDays className="w-4 h-4 mr-2" />
+                                    View Day
+                                  </Button>
+                                </a>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </section>
                     ))}
                   </div>
                 )}
