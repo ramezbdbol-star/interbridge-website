@@ -22,7 +22,12 @@ import {
   sendBookingApprovalConfirmation,
   sendContactNotification,
 } from "./email";
-import { hashToken, verifySignedActionToken } from "./secureTokens";
+import {
+  createSignedGoogleOauthState,
+  hashToken,
+  verifySignedActionToken,
+  verifySignedGoogleOauthState,
+} from "./secureTokens";
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "Mirabelle";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Mira.112233";
@@ -33,7 +38,6 @@ const GOOGLE_OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
 const BOOKING_MAINTENANCE_INTERVAL_MS = 5 * 60 * 1000;
 
 const bookingRateMap = new Map<string, number[]>();
-const googleOauthStateStore = new Map<string, number>();
 let bookingMaintenanceStarted = false;
 
 async function requireAdminSession(req: Request, res: Response): Promise<boolean> {
@@ -120,32 +124,12 @@ function renderActionHtml(title: string, message: string, success: boolean): str
   `;
 }
 
-function cleanupGoogleOauthStates() {
-  const now = Date.now();
-  googleOauthStateStore.forEach((expiresAt, state) => {
-    if (expiresAt <= now) {
-      googleOauthStateStore.delete(state);
-    }
-  });
-}
-
 function getGoogleOauthState(): string {
-  cleanupGoogleOauthStates();
-  const state = randomBytes(20).toString("hex");
-  googleOauthStateStore.set(state, Date.now() + GOOGLE_OAUTH_STATE_TTL_MS);
-  return state;
+  return createSignedGoogleOauthState(new Date(Date.now() + GOOGLE_OAUTH_STATE_TTL_MS));
 }
 
 function consumeGoogleOauthState(state: string): boolean {
-  cleanupGoogleOauthStates();
-  const expiresAt = googleOauthStateStore.get(state);
-  if (!expiresAt || expiresAt <= Date.now()) {
-    googleOauthStateStore.delete(state);
-    return false;
-  }
-
-  googleOauthStateStore.delete(state);
-  return true;
+  return !!verifySignedGoogleOauthState(state);
 }
 
 async function sendBookingApprovedEmail(bookingId: string): Promise<void> {

@@ -9,6 +9,11 @@ interface SignedActionPayload {
   nonce: string;
 }
 
+interface SignedGoogleOauthStatePayload {
+  expiresAt: string;
+  nonce: string;
+}
+
 function getSecret(): string {
   const secret = process.env.BOOKING_ACTION_TOKEN_SECRET;
   if (!secret) {
@@ -80,6 +85,46 @@ export function verifySignedActionToken(token: string): SignedActionPayload | nu
 
     const expiresAt = new Date(payload.expiresAt);
     if (Number.isNaN(expiresAt.getTime())) {
+      return null;
+    }
+
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+export function createSignedGoogleOauthState(expiresAt: Date): string {
+  const payload: SignedGoogleOauthStatePayload = {
+    expiresAt: expiresAt.toISOString(),
+    nonce: randomBytes(12).toString("hex"),
+  };
+
+  const payloadBase64 = toBase64Url(JSON.stringify(payload));
+  const signature = sign(payloadBase64);
+  return `${payloadBase64}.${signature}`;
+}
+
+export function verifySignedGoogleOauthState(state: string): SignedGoogleOauthStatePayload | null {
+  const [payloadBase64, providedSignature] = state.split(".");
+  if (!payloadBase64 || !providedSignature) {
+    return null;
+  }
+
+  const expectedSignature = sign(payloadBase64);
+  if (providedSignature !== expectedSignature) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(fromBase64Url(payloadBase64)) as SignedGoogleOauthStatePayload;
+
+    if (!payload.expiresAt || !payload.nonce) {
+      return null;
+    }
+
+    const expiresAt = new Date(payload.expiresAt);
+    if (Number.isNaN(expiresAt.getTime()) || expiresAt <= new Date()) {
       return null;
     }
 
