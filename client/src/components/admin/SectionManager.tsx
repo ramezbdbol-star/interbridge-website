@@ -50,6 +50,7 @@ export function SectionManager({ onClose }: { onClose: () => void }) {
     hero: 'Hero Banner',
     services: 'Services',
     process: 'Our Process',
+    blog: 'Blog',
     faq: 'FAQ & Pricing',
     reviews: 'Client Reviews',
     'book-now': 'Book Now',

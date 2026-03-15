@@ -9,6 +9,7 @@ import { Footer } from '@/components/layout/Footer';
 import { HeroSection } from '@/components/sections/HeroSection';
 import { ServicesOverview } from '@/components/sections/ServicesOverview';
 import { ProcessSection } from '@/components/sections/ProcessSection';
+import { BlogTeaserSection } from '@/components/sections/BlogTeaserSection';
 import { FaqSection } from '@/components/sections/FaqSection';
 import { SocialProofSection } from '@/components/sections/SocialProofSection';
 import { BookNowSection } from '@/components/sections/BookNowSection';
@@ -98,6 +99,8 @@ export default function Home() {
         return <ServicesOverview key={sectionId} />;
       case 'process':
         return <ProcessSection key={sectionId} />;
+      case 'blog':
+        return <BlogTeaserSection key={sectionId} />;
       case 'faq':
         return <FaqSection key={sectionId} openFaq={openFaq} toggleFaq={toggleFaq} />;
       case 'reviews':

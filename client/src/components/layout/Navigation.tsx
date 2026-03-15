@@ -91,6 +91,11 @@ export function Navigation({ scrollToSection }: NavigationProps) {
     setLocation(targetPath);
   };
 
+  const handleBlogNavigation = () => {
+    closeMenus();
+    window.location.href = '/blog';
+  };
+
   const handleMouseEnter = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     setServicesOpen(true);
@@ -207,6 +212,14 @@ export function Navigation({ scrollToSection }: NavigationProps) {
               data-testid="nav-process"
             >
               How It Works
+            </button>
+
+            <button
+              onClick={handleBlogNavigation}
+              className="px-4 py-2 rounded-lg font-medium text-sm transition-colors hover:bg-slate-100 text-slate-700 hover:text-slate-900"
+              data-testid="nav-blog"
+            >
+              Blog
             </button>
 
             <button
@@ -335,6 +348,12 @@ export function Navigation({ scrollToSection }: NavigationProps) {
                       className="flex items-center gap-3 w-full px-3 py-3 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors"
                     >
                       How It Works
+                    </button>
+                    <button
+                      onClick={handleBlogNavigation}
+                      className="flex items-center gap-3 w-full px-3 py-3 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors"
+                    >
+                      Blog
                     </button>
                     <button
                       onClick={() => handleSectionClick('faq')}

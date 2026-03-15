@@ -28,9 +28,11 @@ import {
   verifySignedActionToken,
   verifySignedGoogleOauthState,
 } from "./secureTokens";
+import { registerBlogRoutes } from "./blogRoutes";
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "Mirabelle";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Mira.112233";
+const HAS_EXPLICIT_ADMIN_CREDENTIALS = Boolean(process.env.ADMIN_USERNAME?.trim() && process.env.ADMIN_PASSWORD?.trim());
 
 const BOOKING_RATE_LIMIT_PER_HOUR = Number(process.env.BOOKING_RATE_LIMIT_PER_HOUR || "6");
 const BOOKING_RATE_WINDOW_MS = 60 * 60 * 1000;
@@ -166,9 +168,18 @@ function startBookingMaintenanceLoop() {
 }
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
+  await registerBlogRoutes(app);
+
   app.post("/api/admin/login", async (req: Request, res: Response) => {
     try {
       const { username, password } = req.body;
+
+      if (process.env.NODE_ENV === "production" && !HAS_EXPLICIT_ADMIN_CREDENTIALS) {
+        return res.status(503).json({
+          success: false,
+          message: "Admin credentials must be configured with ADMIN_USERNAME and ADMIN_PASSWORD in production.",
+        });
+      }
 
       if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
         const token = randomBytes(32).toString("hex");

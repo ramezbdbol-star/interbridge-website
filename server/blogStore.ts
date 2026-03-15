@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import { Firestore, Timestamp } from "@google-cloud/firestore";
+import { z } from "zod";
 import {
   type AdminReplyInput,
   type AuthorProfile,
@@ -79,7 +80,7 @@ function toStringArray(value: unknown): string[] {
   return value.map((item) => (typeof item === "string" ? item.trim() : "")).filter(Boolean);
 }
 
-function parse<T>(schema: { safeParse: (value: unknown) => { success: boolean; data: T } }, value: unknown, fallback: T): T {
+function parse<T>(schema: z.ZodType<T, any, any>, value: unknown, fallback: T): T {
   const parsed = schema.safeParse(value);
   return parsed.success ? parsed.data : fallback;
 }
@@ -135,6 +136,7 @@ function parsePost(id: string, data: FirebaseFirestore.DocumentData): BlogPost {
       relatedServiceIds: toStringArray(data.relatedServiceIds),
       faqIds: toStringArray(data.faqIds),
       featured: toBooleanValue(data.featured, false),
+      featuredOrder: toNumberValue(data.featuredOrder),
       seoTitle: toStringValue(data.seoTitle),
       seoDescription: toStringValue(data.seoDescription),
       canonicalUrl: toNullableString(data.canonicalUrl),
@@ -159,6 +161,7 @@ function parsePost(id: string, data: FirebaseFirestore.DocumentData): BlogPost {
       relatedServiceIds: [],
       faqIds: [],
       featured: false,
+      featuredOrder: 0,
       seoTitle: "",
       seoDescription: "",
       canonicalUrl: null,
@@ -433,7 +436,7 @@ export class BlogStore {
     return parseCategory(doc.id, doc.data());
   }
 
-  async saveCategory(input: BlogCategoryInput, id = randomUUID()): Promise<BlogCategory> {
+  async saveCategory(input: BlogCategoryInput, id: string = randomUUID()): Promise<BlogCategory> {
     const now = new Date();
     const ref = firestore.collection(collections.categories).doc(id);
     const existing = await ref.get();
@@ -470,7 +473,7 @@ export class BlogStore {
     return post;
   }
 
-  async savePost(input: BlogPostInput, id = randomUUID()): Promise<BlogPost> {
+  async savePost(input: BlogPostInput, id: string = randomUUID()): Promise<BlogPost> {
     const now = new Date();
     const ref = firestore.collection(collections.posts).doc(id);
     const existing = await ref.get();
@@ -495,6 +498,7 @@ export class BlogStore {
       tags: input.tags,
       relatedServiceIds: input.relatedServiceIds,
       faqIds: input.faqIds,
+      featuredOrder: input.featured ? input.featuredOrder : 0,
       createdAt: existingPost?.createdAt ?? now,
       updatedAt: now,
       publishedAt: dates.publishedAt,
@@ -514,7 +518,7 @@ export class BlogStore {
     const now = new Date();
     const [postsSnapshot, categories, faqs, comments] = await Promise.all([
       firestore.collection(collections.posts).get(),
-      this.listCategories(false),
+      this.listCategories(!!options.includeUnpublished ? false : true),
       this.listFaqs({ visibleOnly: false }),
       this.listComments({ visibleOnly: false }),
     ]);
@@ -554,6 +558,13 @@ export class BlogStore {
     }
 
     posts = posts.sort((a, b) => {
+      if (a.featured !== b.featured) {
+        return a.featured ? -1 : 1;
+      }
+
+      if (a.featured && b.featured && a.featuredOrder !== b.featuredOrder) {
+        return a.featuredOrder - b.featuredOrder;
+      }
       const left = a.publishedAt ?? a.updatedAt;
       const right = b.publishedAt ?? b.updatedAt;
       return right.getTime() - left.getTime();
@@ -582,7 +593,7 @@ export class BlogStore {
     if (!post) return undefined;
 
     const [categories, faqs, comments] = await Promise.all([
-      this.listCategories(false),
+      this.listCategories(includeUnpublished ? false : true),
       this.listFaqs({ postId: post.id, visibleOnly: !includeUnpublished }),
       this.listComments({ postId: post.id, visibleOnly: !includeUnpublished }),
     ]);
@@ -622,7 +633,11 @@ export class BlogStore {
     return parseFaq(doc.id, doc.data() || {});
   }
 
-  async saveFaq(input: FaqEntryInput, id = randomUUID()): Promise<FaqEntry> {
+  async saveFaq(input: FaqEntryInput, id: string = randomUUID()): Promise<FaqEntry> {
+    if (input.scope === "post" && !input.postId) {
+      throw new Error("Post-specific FAQs must be linked to a blog post.");
+    }
+
     const now = new Date();
     const ref = firestore.collection(collections.faqs).doc(id);
     const existing = await ref.get();
@@ -735,7 +750,7 @@ export class BlogStore {
 
   async createMediaAsset(
     asset: Omit<MediaAsset, "id" | "createdAt" | "updatedAt">,
-    id = randomUUID(),
+    id: string = randomUUID(),
   ): Promise<MediaAsset> {
     const now = new Date();
     const payload = {

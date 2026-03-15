@@ -73,7 +73,7 @@ interface ContentContextType {
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
 
-const DEFAULT_SECTION_ORDER = ['hero', 'services', 'process', 'faq', 'reviews', 'book-now', 'contact'];
+const DEFAULT_SECTION_ORDER = ['hero', 'services', 'process', 'blog', 'faq', 'reviews', 'book-now', 'contact'];
 const DEFAULT_SECTION_SET = new Set(DEFAULT_SECTION_ORDER);
 
 export function ContentProvider({ children }: { children: ReactNode }) {

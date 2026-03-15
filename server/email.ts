@@ -38,6 +38,14 @@ interface BookingApprovalConfirmationData {
   needsMeetLink: boolean;
 }
 
+interface BlogCommentNotificationData {
+  postTitle: string;
+  postUrl: string;
+  displayName: string;
+  email: string | null;
+  body: string;
+}
+
 function getTransporter() {
   const appPassword = process.env.GMAIL_APP_PASSWORD;
   if (!appPassword) {
@@ -293,6 +301,57 @@ export async function sendBookingApprovalConfirmation(
     return true;
   } catch (error: any) {
     console.error("Failed to send booking approval confirmation:", error?.message || error);
+    return false;
+  }
+}
+
+export async function sendBlogCommentNotification(data: BlogCommentNotificationData): Promise<boolean> {
+  const transporter = getTransporter();
+
+  if (!transporter) {
+    console.log("Blog comment email skipped: GMAIL_APP_PASSWORD not configured");
+    console.log("New blog comment received:", data);
+    return false;
+  }
+
+  try {
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 620px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden;">
+        <div style="background: #0f172a; color: white; padding: 20px;">
+          <h2 style="margin: 0;">New Blog Comment</h2>
+        </div>
+        <div style="padding: 20px; background: #ffffff;">
+          <p><strong>Article:</strong> <a href="${data.postUrl}">${data.postTitle}</a></p>
+          <p><strong>Name:</strong> ${data.displayName}</p>
+          <p><strong>Email:</strong> ${data.email || "(not provided)"}</p>
+          <div style="margin-top: 16px; padding: 14px; border-radius: 8px; background: #f8fafc; border: 1px solid #e2e8f0;">
+            <p style="margin: 0; white-space: pre-wrap;">${data.body}</p>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const text = [
+      "New blog comment",
+      `Article: ${data.postTitle}`,
+      `Article URL: ${data.postUrl}`,
+      `Name: ${data.displayName}`,
+      `Email: ${data.email || "(not provided)"}`,
+      "",
+      data.body,
+    ].join("\n");
+
+    await transporter.sendMail({
+      from: `InterBridge <${ADMIN_EMAIL}>`,
+      to: ADMIN_EMAIL,
+      subject: `New Blog Comment on ${data.postTitle}`,
+      html,
+      text,
+    });
+
+    return true;
+  } catch (error: any) {
+    console.error("Failed to send blog comment notification:", error?.message || error);
     return false;
   }
 }
